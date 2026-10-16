@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AutoML Workspace</title>
+<link rel="stylesheet" href="/static/workspace.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237C6CFF'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='%23fff' font-family='sans-serif'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ================= HEADER ================= -->
+  <header class="hdr">
+    <button class="iconbtn only-narrow" id="menuBtn" type="button" aria-label="Open navigation menu" title="Navigation">☰</button>
+
+    <div class="hdr-brand">
+      <span class="hdr-mark" aria-hidden="true">✦</span>
+      <span class="hdr-name">AutoML Workspace</span>
+    </div>
+
+    <span class="hdr-div" aria-hidden="true"></span>
+
+    <div class="hdr-proj">
+      <b id="hdrProject">No project</b>
+    </div>
+
+    <!-- current workspace indicator: the user always knows where they are -->
+    <div class="hdr-where" id="hdrWhere" aria-live="polite">
+      <i aria-hidden="true">◈</i><span id="hdrWhereT">Projects</span>
+    </div>
+
+    <span class="hdr-spacer"></span>
+
+    <div class="hdr-right">
+      <span class="pill" id="runPill" title="Current run status">
+        <span class="dot" aria-hidden="true"></span><span id="runPillT">Idle</span>
+      </span>
+      <button class="iconbtn" id="paletteBtn" type="button" aria-label="Search (Ctrl or Command + K)" title="Search  ⌘K">⌕</button>
+      <a class="iconbtn" id="helpBtn" href="/docs" target="_blank" rel="noopener" aria-label="API documentation and help" title="Help &amp; API docs">?</a>
+      <button class="iconbtn" id="collapseBtn" type="button" aria-label="Collapse sidebar" title="Collapse sidebar">⇤</button>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="side" aria-label="Main navigation">
+      <div class="side-proj">
+        <span class="hdr-mark" style="width:26px;height:26px;font-size:12px;border-radius:8px" aria-hidden="true">◈</span>
+        <span class="side-proj-txt">
+          <b id="sideProjName">All projects</b>
+          <span id="sideProjMeta">Choose a project to begin</span>
+        </span>
+        <button class="xbtn" id="sideBackBtn" type="button" aria-label="Back to all projects" title="Back to all projects" hidden>←</button>
+      </div>
+
+      <nav class="side-nav" id="sideNav" aria-label="Workspace sections"></nav>
+
+      <div class="side-foot">
+        <button class="btn ghost sm block" id="newProjBtn" type="button">
+          <i aria-hidden="true">＋</i><span>New project</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <main class="main" id="main" tabindex="-1">
+
+      <!-- ---------- Projects registry ---------- -->
+      <section class="page on" id="v-projects" aria-label="Projects">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Workspace</div>
+            <h1>Projects</h1>
+            <p>Each project is a self-contained AutoML workspace with its own datasets, agents, runs and reports.</p>
+          </div>
+          <div class="phead-act">
+            <button class="btn pri" id="newProjBtn2" type="button"><i aria-hidden="true">＋</i> New project</button>
+          </div>
+        </div>
+        <div id="projectsBody"></div>
+      </section>
+
+      <!-- ---------- Project command centre ---------- -->
+      <section class="page" id="v-home" aria-label="Project overview">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow" id="homeEyebrow">Project</div>
+            <h1 id="homeName">—</h1>
+            <p id="homeDesc">A calm starting point. Ask the agent, or open a workspace section.</p>
+          </div>
+          <div class="phead-act">
+            <button class="btn pri" id="homeAsk" type="button"><i aria-hidden="true">✦</i> Ask AutoML</button>
+            <button class="btn" id="homeRun" type="button"><i aria-hidden="true">▶</i> New experiment</button>
+          </div>
+        </div>
+        <div id="homeBody"></div>
+      </section>
+
+      <!-- ---------- Chat ---------- -->
+      <section class="page" id="v-chat" aria-label="Chat">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Workspace</div>
+            <h1>Chat</h1>
+            <p>Describe your task in plain language. The agent asks only what it genuinely needs.</p>
+          </div>
+          <div class="phead-act">
+            <select class="inp" id="sessionSel" aria-label="Chat session" style="width:auto;min-width:190px"></select>
+            <button class="btn ghost" id="newSessionBtn" type="button"><i aria-hidden="true">＋</i> New session</button>
+            <button class="btn ghost" id="clearChatBtn" type="button">Clear chat</button>
+          </div>
+        </div>
+
+        <div class="chatwrap">
+          <div id="chatHero" class="chat-hero">
+            <div class="chat-hero-mark" aria-hidden="true">✦</div>
+            <h2>What would you like to build?</h2>
+            <p>Describe your ML task, dataset, target, metric, or experiment.</p>
+            <div class="sugs" id="chatSugs" style="margin-bottom:0"></div>
+          </div>
+          <div class="thread" id="chatThread" aria-live="polite"></div>
+          <div class="typing" id="chatTyping"><span class="ticks"><i></i><i></i><i></i></span> agents working…</div>
+          <div class="composer-wrap" id="chatComposerWrap">
+            <div class="composer">
+              <label class="sr" for="chatInput">Message the AutoML agent</label>
+              <textarea id="chatInput" rows="1" placeholder="Ask the agent…" autocomplete="off"></textarea>
+              <div class="composer-f">
+                <button class="chip" id="chipAttach" type="button"><i aria-hidden="true">⊕</i> Attach dataset</button>
+                <button class="chip" id="chipMetric" type="button"><i aria-hidden="true">◎</i> Choose metric</button>
+                <button class="chip" id="chipConstraint" type="button"><i aria-hidden="true">⌗</i> Add constraint</button>
+                <span class="sp"></span>
+                <button class="btn ghost sm" id="chatConfigBtn" type="button" title="Advanced run configuration">
+                  <i aria-hidden="true">⌗</i> Configure
+                </button>
+                <button class="btn pri" id="sendBtn" type="button">
+                  Send <i aria-hidden="true">↑</i>
+                </button>
+              </div>
+            </div>
+            <div class="sugs" id="chatSugs2" style="justify-content:flex-start"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- Data registry ---------- -->
+      <section class="page" id="v-data" aria-label="Data">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Data</div>
+            <h1>Dataset registry</h1>
+            <p>Every dataset available to this project, with the source the agent actually used.</p>
+          </div>
+          <div class="phead-act">
+            <button class="btn pri" id="addDataBtn" type="button"><i aria-hidden="true">＋</i> Add dataset</button>
+          </div>
+        </div>
+        <div class="filters">
+          <input class="inp search" id="dataSearch" type="search" placeholder="Search datasets…" aria-label="Search datasets" />
+          <select class="inp" id="dataFilter" aria-label="Filter datasets">
+            <option value="">All sources</option>
+          </select>
+        </div>
+        <div id="dataBody"></div>
+      </section>
+
+      <!-- ---------- Dataset inspector ---------- -->
+      <section class="page" id="v-dataset" aria-label="Dataset inspector">
+        <div class="phead">
+          <div class="phead-txt">
+            <button class="btn ghost sm" id="dsBack" type="button" style="margin-bottom:14px">
+              <i aria-hidden="true">←</i> Data
+            </button>
+            <h1 id="dsName">—</h1>
+            <p id="dsMeta" class="muted"></p>
+          </div>
+          <div class="phead-act" id="dsActions"></div>
+        </div>
+        <div class="tabs" id="dsTabs" role="tablist"></div>
+        <div id="dsBody"></div>
+      </section>
+
+      <!-- ---------- Model lab ---------- -->
+      <section class="page" id="v-lab" aria-label="Model lab">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Models</div>
+            <h1>Model Lab</h1>
+            <p>Choose the models the campaign is allowed to use, then set how the run is evaluated.</p>
+          </div>
+          <div class="phead-act">
+            <div class="seg" id="modeSeg" role="group" aria-label="Control mode">
+              <button type="button" data-mode="ai" class="on">AI</button>
+              <button type="button" data-mode="manual">Manual</button>
+              <button type="button" data-mode="hybrid">Hybrid</button>
+            </div>
+          </div>
+        </div>
+        <div id="labBody"></div>
+      </section>
+
+      <!-- ---------- Experiments ---------- -->
+      <section class="page" id="v-experiments" aria-label="Experiments">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Workspace</div>
+            <h1>Experiments</h1>
+            <p>Every run this project has executed, newest first.</p>
+          </div>
+          <div class="phead-act">
+            <button class="btn pri" id="newExpBtn" type="button"><i aria-hidden="true">＋</i> New experiment</button>
+          </div>
+        </div>
+        <div class="filters" id="expFilters">
+          <input class="inp search" id="expSearch" type="search" placeholder="Search runs or models…" aria-label="Search experiments" />
+          <select class="inp" id="expModel" aria-label="Filter by model"><option value="">All models</option></select>
+          <select class="inp" id="expStatus" aria-label="Filter by status">
+            <option value="">All statuses</option>
+            <option value="running">Running</option>
+            <option value="done">Done</option>
+            <option value="failed">Failed</option>
+            <option value="paused">Paused</option>
+          </select>
+          <select class="inp" id="expSort" aria-label="Sort experiments">
+            <option value="new">Newest first</option>
+            <option value="metric">Best metric</option>
+            <option value="dur">Longest</option>
+            <option value="model">Model name</option>
+          </select>
+        </div>
+        <div id="expBody"></div>
+      </section>
+
+      <!-- ---------- Experiment detail / run ---------- -->
+      <section class="page" id="v-run" aria-label="Experiment detail">
+        <div class="phead">
+          <div class="phead-txt">
+            <button class="btn ghost sm" id="runBack" type="button" style="margin-bottom:14px">
+              <i aria-hidden="true">←</i> Experiments
+            </button>
+            <h1 id="runName">—</h1>
+            <p id="runMeta" class="muted"></p>
+          </div>
+          <div class="phead-act" id="runActions"></div>
+        </div>
+        <div class="tabs" id="runTabs" role="tablist"></div>
+        <div id="runBody"></div>
+      </section>
+
+      <!-- ---------- Live runs monitor ---------- -->
+      <section class="page" id="v-monitor" aria-label="Live runs">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Monitoring</div>
+            <h1>Live Runs</h1>
+            <p>Execution is happening in the background. You can leave this page at any time — the run continues.</p>
+          </div>
+          <div class="phead-act" id="monActions">
+            <!-- Progressive enhancement: the action slot exists in the shell;
+                 renderMonitor() replaces it with Stop/Resume once the run state
+                 is known, enabling Resume only for PAUSED/FAILED runs. -->
+            <button class="btn pri" type="button" disabled
+              title="Enabled once the run state is known">Resume</button>
+          </div>
+        </div>
+        <div id="monBody"></div>
+      </section>
+
+      <!-- ---------- Model report ---------- -->
+      <section class="page" id="v-report" aria-label="Model report">
+        <div class="phead">
+          <div class="phead-txt">
+            <button class="btn ghost sm" id="repBack" type="button" style="margin-bottom:14px">
+              <i aria-hidden="true">←</i> Reports
+            </button>
+            <div class="phead-eyebrow">Model report</div>
+            <h1 id="repName">—</h1>
+            <p id="repMeta" class="muted"></p>
+          </div>
+          <div class="phead-act" id="repActions"></div>
+        </div>
+        <div id="repBody"></div>
+      </section>
+
+      <!-- ---------- Reports index ---------- -->
+      <section class="page" id="v-reports" aria-label="Reports">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Monitoring</div>
+            <h1>Reports</h1>
+            <p>How finished models performed. Separate from Live Runs, which shows what is happening now.</p>
+          </div>
+        </div>
+        <div id="reportsBody"></div>
+      </section>
+
+      <!-- ---------- Compare ---------- -->
+      <section class="page" id="v-compare" aria-label="Compare models">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Models</div>
+            <h1>Compare</h1>
+            <p>You choose which runs to compare. Nothing is hidden from you and no winner is imposed.</p>
+          </div>
+        </div>
+        <div id="compareBody"></div>
+      </section>
+
+      <!-- ---------- Code / artifacts ---------- -->
+      <section class="page" id="v-code" aria-label="Code and artifacts">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Workspace</div>
+            <h1>Code &amp; Artifacts</h1>
+            <p>Real files produced by this project's runs. Nothing here is generated for display.</p>
+          </div>
+          <div class="phead-act">
+            <button class="btn ghost" id="codeCopy" type="button"><i aria-hidden="true">⧉</i> Copy</button>
+            <button class="btn ghost" id="codeDl" type="button"><i aria-hidden="true">↓</i> Download</button>
+          </div>
+        </div>
+        <div class="split">
+          <div class="card flush" id="codeTree"></div>
+          <div>
+            <div class="card-t" style="padding:0 0 12px">
+              <h3 id="codeName" class="mono">—</h3>
+              <span class="sp"></span>
+              <span class="hint" id="codeSize"></span>
+            </div>
+            <pre class="code" id="codeView" tabindex="0" aria-label="File contents">Select a file to view its contents.</pre>
+          </div>
+          <div class="asst card" id="codeAsst"></div>
+        </div>
+        <div class="sect" style="margin-top:var(--s6)">
+          <details class="disc" id="codeLogs">
+            <summary><span class="chev">▸</span> Developer logs <span class="dspacer"></span><span class="hint" id="codeLogN"></span></summary>
+            <div class="dbody" id="codeLogBody"></div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ---------- Project settings ---------- -->
+      <section class="page" id="v-settings" aria-label="Project settings">
+        <div class="phead">
+          <div class="phead-txt">
+            <div class="phead-eyebrow">Settings</div>
+            <h1>Project settings</h1>
+            <p>Identity, agent context, and moving resources in from another project.</p>
+          </div>
+        </div>
+        <div class="tabs" id="setTabs" role="tablist"></div>
+        <div id="setBody"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ================= FLOATING AGENT ================= -->
+<button class="btn pri" id="chatFab" type="button" hidden
+        style="position:fixed;right:22px;bottom:22px;z-index:50;box-shadow:0 12px 34px rgba(124,108,255,.28)">
+  <i aria-hidden="true">✦</i> Agent
+</button>
+
+<!-- ================= OVERLAYS ================= -->
+<div class="scrim" id="scrim"></div>
+
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
+  <div class="drawer-h">
+    <div class="dh-t">
+      <h3 id="drawerTitle">Panel</h3>
+      <div class="dh-s" id="drawerSub"></div>
+    </div>
+    <button class="xbtn" id="drawerClose" type="button" aria-label="Close panel" title="Close (Esc)">✕</button>
+  </div>
+  <div class="drawer-b" id="drawerBody"></div>
+  <div class="drawer-f" id="drawerFoot"></div>
+</aside>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+  <div class="modal-h">
+    <h3 id="modalTitle">Confirm</h3>
+    <button class="xbtn" id="modalClose" type="button" aria-label="Close dialog" title="Close (Esc)">✕</button>
+  </div>
+  <div class="modal-b" id="modalBody"></div>
+  <div class="modal-f" id="modalFoot"></div>
+</div>
+
+<div class="palette" id="palette" role="dialog" aria-modal="true" aria-label="Search" aria-hidden="true">
+  <div class="palette-in">
+    <i aria-hidden="true">⌕</i>
+    <label class="sr" for="palInput">Search datasets, models, experiments, reports and files</label>
+    <input id="palInput" type="text" placeholder="Search anything…" autocomplete="off" />
+    <kbd>Esc</kbd>
+  </div>
+  <div class="palette-r" id="palResults"></div>
+  <div class="palette-f">↑ ↓ to navigate · ↵ to open · Esc to close</div>
+</div>
+
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<!-- ================= PERSISTENT ASSISTANT DRAWER ================= -->
+<aside class="drawer" id="chatDrawer" role="dialog" aria-modal="false" aria-labelledby="drawerChatTitle" aria-hidden="true">
+  <div class="drawer-h">
+    <span class="hdr-mark" style="width:26px;height:26px;font-size:12px;border-radius:8px" aria-hidden="true">✦</span>
+    <div class="dh-t">
+      <h3 id="drawerChatTitle">Agent</h3>
+      <div class="dh-s">Same session as the chat workspace</div>
+    </div>
+    <button class="xbtn" id="drawerChatClose" type="button" aria-label="Close the agent panel" title="Close (Esc)">✕</button>
+  </div>
+  <div class="drawer-b" style="padding:0;display:flex;flex-direction:column">
+    <div class="thread" id="drawerChatThread" aria-live="polite" style="flex:1;padding:var(--s5);gap:var(--s5)"></div>
+    <div class="typing" id="drawerChatTyping" style="padding:0 var(--s5)"><span class="ticks"><i></i><i></i><i></i></span> agents working…</div>
+    <div style="padding:var(--s4) var(--s5) var(--s5)">
+      <div class="composer">
+        <label class="sr" for="drawerChatInput">Message the AutoML agent</label>
+        <textarea id="drawerChatInput" rows="1" placeholder="Ask the agent…" autocomplete="off"></textarea>
+        <div class="composer-f">
+          <button class="chip" id="drawerChatMetrics" type="button"><i aria-hidden="true">◎</i> Metric</button>
+          <button class="chip" id="drawerChatLab" type="button"><i aria-hidden="true">⚙</i> Model Lab</button>
+          <span class="sp"></span>
+          <button class="btn pri sm" id="drawerChatSend" type="button">Send <i aria-hidden="true">↑</i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<script src="/static/workspace.core.js"></script>
+<script src="/static/workspace.chat.js"></script>
+<script src="/static/workspace.lab.js"></script>
+<script src="/static/workspace.drawer.js"></script>
+<script src="/static/workspace.report.js"></script>
+</body>
+</html>

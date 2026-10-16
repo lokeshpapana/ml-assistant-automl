@@ -1,0 +1,59 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+backend/.venv/
+
+# ---- Test / type / lint caches ----
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---- Runtime outputs (recreated on startup; never commit datasets/models) ----
+automl_outputs/
+uploads/
+mlruns/
+*.duckdb
+*.pkl
+*.joblib
+*.h5
+*.onnx
+
+# ---- Local databases ----
+automl_app.db
+*.sqlite3
+
+# ---- Environment & secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ---- Local agent/opencode state ----
+.opencode/
+
+# ---- Backups ----
+*.bak
+*~

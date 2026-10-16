@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/mcp",
+  "mcpServers": {
+    "paper-researcher": {
+      "command": "python",
+      "args": ["-m", "backend.research.mcp_server_arxiv"],
+      "env": {
+        "SEMANTIC_SCHOLAR_API_KEY": "${SEMANTIC_SCHOLAR_API_KEY}"
+      }
+    }
+  }
+}

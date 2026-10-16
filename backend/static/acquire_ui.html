@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ML Assistant — Dataset Acquisition</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 20px; }
+    label { display: block; margin-top: 12px; font-size: 13px; color: #94a3b8; }
+    input, textarea, select { width: 100%; box-sizing: border-box; margin-top: 4px;
+      padding: 8px; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; }
+    textarea { min-height: 64px; }
+    button { margin-top: 16px; padding: 10px 18px; background: #2563eb; color: white;
+      border: 0; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #1d4ed8; }
+    .row { display: flex; gap: 12px; }
+    .row > div { flex: 1; }
+    pre { background: #1e293b; border: 1px solid #334155; padding: 14px; border-radius: 6px;
+      overflow: auto; max-height: 520px; font-size: 12px; }
+    .status { margin-top: 16px; padding: 10px; border-radius: 6px; }
+    .ok { background: #064e3b; }
+    .err { background: #7f1d1d; }
+    a { color: #60a5fa; }
+    .hint { font-size: 12px; color: #64748b; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🧪 Dataset Acquisition &amp; Optimization Agent</h1>
+    <p class="hint">Provide your own dataset file, or leave the file path empty to let the agent search OpenML/HuggingFace.</p>
+
+    <form id="acqForm">
+      <label>Request (natural language)</label>
+      <textarea id="request" placeholder="predict fraud with 5 features and 2000 rows">predict fraud with 5 features</textarea>
+
+      <div class="row">
+        <div>
+          <label>Target column (optional)</label>
+          <input id="target" placeholder="e.g. fraud" />
+        </div>
+        <div>
+          <label>Local file path (optional)</label>
+          <input id="local_file_path" placeholder="/path/to/data.csv" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Project ID (optional)</label>
+          <input id="project_id" placeholder="uuid" />
+        </div>
+        <div>
+          <label>Output format</label>
+          <select id="output_format">
+            <option value="csv">CSV</option>
+            <option value="xlsx">Excel (.xlsx)</option>
+            <option value="parquet">Parquet</option>
+            <option value="json">JSON</option>
+            <option value="sql">SQL</option>
+          </select>
+        </div>
+        <div>
+          <label>Max candidates</label>
+          <input id="max_candidates" type="number" value="5" />
+        </div>
+      </div>
+
+      <button type="submit">Acquire &amp; Optimize</button>
+    </form>
+
+    <div id="status"></div>
+    <h3>Report</h3>
+    <pre id="report">—</pre>
+  </div>
+
+  <script>
+    const form = document.getElementById("acqForm");
+    const statusEl = document.getElementById("status");
+    const reportEl = document.getElementById("report");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusEl.className = "";
+      statusEl.textContent = "Running…";
+      reportEl.textContent = "—";
+
+      const payload = {
+        request: document.getElementById("request").value,
+        target: document.getElementById("target").value || null,
+        local_file_path: document.getElementById("local_file_path").value || null,
+        project_id: document.getElementById("project_id").value || null,
+        output_format: document.getElementById("output_format").value,
+        max_candidates: parseInt(document.getElementById("max_candidates").value, 10),
+      };
+
+      try {
+        const res = await fetch("/ml/dataset-acquisition/acquire", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          statusEl.className = "status err";
+          statusEl.textContent = "Error: " + (data.detail || res.status);
+          reportEl.textContent = JSON.stringify(data, null, 2);
+          return;
+        }
+        statusEl.className = "status ok";
+        const out = data.output_path ? `Saved to: ${data.output_path}` : "";
+        statusEl.textContent = `Status: ${data.status}  |  Target: ${data.problem?.target} (${data.problem?.target_type})  |  Features: ${data.dimensions?.final_input_features}  |  Score: ${data.dataset_quality?.overall_score}  ${out}`;
+        reportEl.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        statusEl.className = "status err";
+        statusEl.textContent = "Request failed: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1954 @@
+# ML Assistant — Complete Learning & Development TODO Roadmap
+
+## How to use this roadmap
+
+* [ ] Work on only one major phase at a time.
+* [ ] For every phase: learn the concepts → build a small piece → test it → document what you learned.
+* [ ] Don't learn AWS services that you don't currently need.
+* [ ] Don't build the agent swarm before you understand a single agent.
+* [ ] Don't build autonomous ML optimization before you can manually run and evaluate ML experiments.
+* [ ] Keep everything in Git from the beginning.
+* [ ] Keep cloud costs under control by using small resources while learning.
+* [ ] Treat every phase as a working milestone.
+
+---
+
+# PHASE 0 — Define ML Assistant
+
+## Goal
+
+Understand exactly what you're building before writing infrastructure.
+
+### Product definition
+
+* [ ] Write down the main purpose of ML Assistant.
+* [ ] Define the first target user.
+* [ ] Define the first 3 problems ML Assistant solves.
+* [ ] Separate "must have" features from "future ideas."
+* [ ] Define what ML Assistant should NOT be allowed to do automatically.
+* [ ] Define which actions require user approval.
+
+### Define the major modules
+
+* [ ] Chat
+* [ ] Projects
+* [ ] Sessions/history
+* [ ] Dataset management
+* [ ] ML experimentation
+* [ ] Model ranking
+* [ ] Agent system
+* [ ] Research
+* [ ] GitHub integration
+* [ ] Database/ERD workspace
+* [ ] Documents/reports
+* [ ] Presentations
+* [ ] Image generation
+* [ ] Model/LLM switching
+* [ ] Agent-to-agent communication
+* [ ] User approval system
+
+### Deliverable
+
+* [ ] Create a document called `ML-Assistant-Product-Spec.md`.
+* [ ] Write a one-page description of the product.
+* [ ] Draw the first high-level architecture.
+
+---
+
+# PHASE 1 — Learn the Programming Foundation
+
+## Goal
+
+Become comfortable enough with software engineering that AWS/agents won't feel like magic.
+
+### Python
+
+* [ ] Variables and data types
+* [ ] Functions
+* [ ] Classes
+* [ ] Exceptions
+* [ ] File handling
+* [ ] Modules
+* [Packages
+* [ ] Virtual environments
+* [ ] Type hints
+* [ ] Async programming
+* [ ] HTTP requests
+* [ ] JSON
+* [ ] Logging
+* [ ] Environment variables
+
+### Git
+
+* [ ] Create a GitHub account/repository.
+* [ ] Learn `git clone`.
+* [ ] Learn `git add`.
+* [ ] Learn `git commit`.
+* [ ] Learn `git push`.
+* [ ] Learn branches.
+* [ ] Learn pull requests.
+* [ ] Learn merge/rebase basics.
+* [ ] Learn `.gitignore`.
+
+### Linux
+
+* [ ] Files/directories
+* [ ] Permissions
+* [ ] Processes
+* [ ] Environment variables
+* [ ] SSH
+* [ ] Package managers
+* [ ] Basic shell commands
+
+### APIs
+
+* [ ] Understand HTTP.
+* [ ] Understand GET/POST/PUT/DELETE.
+* [ ] Understand headers.
+* [ ] Understand authentication.
+* [ ] Understand REST APIs.
+* [ ] Understand JSON request/response.
+* [ ] Build a small REST API.
+
+### Deliverable
+
+* [ ] Build a small Python backend.
+* [ ] Put it on GitHub.
+* [ ] Create a README.
+* [ ] Create tests.
+* [ ] Run the project locally.
+
+---
+
+# PHASE 2 — Learn Databases
+
+## Goal
+
+Understand how ML Assistant will store users, projects, chats, experiments, and metadata.
+
+### SQL
+
+* [ ] Tables
+* [ ] Rows
+* [ ] Columns
+* [ ] Primary keys
+* [ ] Foreign keys
+* [ ] Relationships
+* [ ] JOIN
+* [ ] GROUP BY
+* [ ] ORDER BY
+* [ ] Indexes
+* [ ] Transactions
+
+### PostgreSQL
+
+* [ ] Install PostgreSQL locally.
+* [ ] Create a database.
+* [ ] Create tables.
+* [ ] Insert data.
+* [ ] Query data.
+* [ ] Create relationships.
+* [ ] Create indexes.
+
+### Database design
+
+Design:
+
+* [ ] Users
+* [ ] Projects
+* [ ] Sessions
+* [ ] Messages
+* [ ] Agents
+* [ ] Tasks
+* [ ] Tool calls
+* [ ] Datasets
+* [ ] Dataset versions
+* [ ] Experiments
+* [ ] Models
+* [ ] Artifacts
+* [ ] Approvals
+
+### ERD
+
+* [ ] Draw the ML Assistant database ERD.
+* [ ] Understand one-to-one relationships.
+* [ ] Understand one-to-many.
+* [ ] Understand many-to-many.
+
+### Deliverable
+
+* [ ] Build the first ML Assistant PostgreSQL database locally.
+* [ ] Create the ERD.
+* [ ] Connect the Python backend to PostgreSQL.
+
+---
+
+# PHASE 3 — Learn Machine Learning Fundamentals
+
+## Goal
+
+Understand what your future ML agent is talking about.
+
+### Core concepts
+
+* [ ] Dataset
+* [ ] Feature
+* [ ] Target
+* [ ] Training data
+* [ ] Validation data
+* [ ] Test data
+* [ ] Data leakage
+* [ ] Missing values
+* [ ] Outliers
+* [ ] Categorical data
+* [ ] Numerical data
+* [ ] Feature engineering
+* [ ] Normalization
+* [ ] Standardization
+
+### ML algorithms
+
+* [ ] Linear regression
+* [ ] Logistic regression
+* [ ] Decision trees
+* [ ] Random forest
+* [ ] Gradient boosting
+* [ ] XGBoost
+* [ ] LightGBM
+* [ ] CatBoost
+* [ ] SVM
+* [ ] KNN
+* [ ] Basic neural networks
+
+### Evaluation
+
+* [ ] Accuracy
+* [ ] Precision
+* [ ] Recall
+* [ ] F1
+* [ ] ROC-AUC
+* [ ] MAE
+* [ ] MSE
+* [ ] RMSE
+* [ ] R²
+* [ ] Confusion matrix
+* [ ] Cross-validation
+
+### Model optimization
+
+* [ ] Hyperparameters
+* [ ] Grid search
+* [ ] Random search
+* [ ] Bayesian optimization
+* [ ] Overfitting
+* [ ] Underfitting
+* [ ] Regularization
+
+### Deliverable
+
+Build a Python program that:
+
+* [ ] Loads a dataset.
+* [ ] Profiles the dataset.
+* [ ] Cleans the dataset.
+* [ ] Creates features.
+* [ ] Trains multiple models.
+* [ ] Evaluates each model.
+* [ ] Ranks the models.
+* [ ] Saves the best model.
+
+This program will eventually become the foundation of your **ML Agent**.
+
+---
+
+# PHASE 4 — Learn Cloud Fundamentals
+
+## Goal
+
+Understand what cloud computing actually means.
+
+### Concepts
+
+* [ ] Cloud computing
+* [ ] Region
+* [ ] Availability Zone
+* [ ] Scalability
+* [ ] High availability
+* [ ] Fault tolerance
+* [ ] Vertical scaling
+* [ ] Horizontal scaling
+* [ ] Infrastructure
+* [ ] Managed services
+* [ ] Serverless
+
+### AWS basics
+
+* [ ] Create AWS account.
+* [ ] Understand AWS Console.
+* [ ] Learn billing.
+* [ ] Configure billing alerts.
+* [ ] Learn IAM.
+* [ ] Learn IAM users.
+* [ ] Learn IAM roles.
+* [ ] Learn IAM policies.
+* [ ] Understand least privilege.
+
+### Deliverable
+
+* [ ] Create your first AWS project/account structure.
+* [ ] Create IAM permissions correctly.
+* [ ] Configure cost/billing alerts.
+
+---
+
+# PHASE 5 — Learn S3
+
+## Goal
+
+Understand cloud storage.
+
+### Learn
+
+* [ ] Bucket
+* [ ] Object
+* [ ] Prefix
+* [ ] Permissions
+* [ ] Lifecycle policies
+* [ ] Versioning
+* [ ] Encryption
+* [ ] Presigned URLs
+
+### Build
+
+* [ ] Create an S3 bucket.
+* [ ] Upload a dataset.
+* [ ] Download a dataset.
+* [ ] Upload an image.
+* [ ] Upload a generated report.
+* [ ] Access S3 from Python.
+* [ ] Generate a presigned URL.
+
+### ML Assistant usage
+
+Design:
+
+```text
+S3
+├── datasets
+├── models
+├── experiments
+├── documents
+├── presentations
+├── images
+└── artifacts
+```
+
+### Deliverable
+
+* [ ] Build dataset upload/download functionality.
+
+---
+
+# PHASE 6 — Learn AWS Networking
+
+## Goal
+
+Understand how your services communicate securely.
+
+### VPC
+
+* [ ] VPC
+* [ ] Subnet
+* [ ] Public subnet
+* [ ] Private subnet
+* [ ] Route table
+* [ ] Internet Gateway
+* [ ] NAT Gateway
+* [ ] Security Group
+* [ ] Network ACL
+
+### Understand this architecture
+
+```text
+Internet
+   |
+Load Balancer
+   |
+Public subnet
+   |
+Private subnet
+   |
+Backend
+   |
+Private database
+```
+
+### Deliverable
+
+* [ ] Create a basic VPC.
+* [ ] Understand how traffic moves through it.
+* [ ] Understand why databases should generally not be publicly accessible.
+
+---
+
+# PHASE 7 — Deploy Your Backend
+
+## Goal
+
+Take your local Python backend and put it in AWS.
+
+### Learn
+
+* [ ] EC2 basics
+* [ ] SSH
+* [ ] Linux server
+* [ ] Docker
+* [ ] Dockerfile
+* [ ] Docker image
+* [ ] Docker container
+* [ ] Container registry
+
+### Build
+
+* [ ] Containerize your backend.
+* [ ] Run it locally with Docker.
+* [ ] Create an ECR repository.
+* [ ] Push your image.
+* [ ] Run your application in AWS.
+* [ ] Connect it to PostgreSQL.
+* [ ] Connect it to S3.
+
+### Later
+
+* [ ] Learn ECS.
+* [ ] Learn Fargate.
+* [ ] Move your application from a manually managed server to ECS/Fargate.
+
+### Deliverable
+
+```text
+Browser
+   |
+AWS
+   |
+Backend
+   |
+PostgreSQL
+   |
+S3
+```
+
+Your first real cloud application.
+
+---
+
+# PHASE 8 — Build the First ML Assistant UI
+
+## Goal
+
+Create the actual product interface.
+
+### Frontend
+
+* [ ] Choose frontend framework.
+* [ ] Create login page.
+* [ ] Create dashboard.
+* [ ] Create project page.
+* [ ] Create chat interface.
+* [ ] Create dataset page.
+* [ ] Create experiment page.
+* [ ] Create settings page.
+
+### Project structure
+
+```text
+User
+ └── Projects
+      ├── Chat
+      ├── Datasets
+      ├── Experiments
+      ├── Models
+      ├── Files
+      └── Settings
+```
+
+### Deliverable
+
+* [ ] User can create a project.
+* [ ] User can open a project.
+* [ ] User can upload a file.
+* [ ] User can send a message.
+
+---
+
+# PHASE 9 — Add Your First LLM
+
+## Goal
+
+Make ML Assistant capable of conversation.
+
+### Learn
+
+* [ ] LLM
+* [ ] Token
+* [ ] Context window
+* [ ] System prompt
+* [ ] User message
+* [ ] Assistant message
+* [ ] Temperature
+* [ ] Model parameters
+* [ ] Structured output
+
+### AWS Bedrock
+
+* [ ] Understand Bedrock.
+* [ ] Call a model through Bedrock.
+* [ ] Understand model IDs.
+* [ ] Understand model costs.
+* [ ] Understand input/output tokens.
+* [ ] Store model metadata.
+
+### Build
+
+```text
+User
+ ↓
+ML Assistant API
+ ↓
+Model Manager
+ ↓
+Bedrock
+ ↓
+Response
+```
+
+### Deliverable
+
+* [ ] User can chat with an LLM.
+* [ ] Conversation is stored.
+* [ ] Model information is stored.
+* [ ] User can reopen the conversation.
+
+---
+
+# PHASE 10 — Build Model Switching
+
+## Goal
+
+Allow the user to change models without losing the conversation.
+
+### Build a Model Abstraction Layer
+
+```text
+Chat
+ ↓
+Model Manager
+ ↓
+Model Provider
+ ↓
+Actual LLM
+```
+
+### Store
+
+* [ ] Conversation ID
+* [ ] Message ID
+* [ ] Model ID
+* [ ] Model provider
+* [ ] Timestamp
+* [ ] Token usage
+* [ ] Cost
+* [ ] Response metadata
+
+### Add
+
+* [ ] Fast model
+* [ ] Balanced model
+* [ ] Powerful model
+* [ ] User-selected model
+
+### Deliverable
+
+* [ ] Start conversation with model A.
+* [ ] Switch to model B.
+* [ ] Continue the same conversation.
+* [ ] Preserve all session history.
+
+---
+
+# PHASE 11 — Learn LLM/Agent Fundamentals
+
+## Goal
+
+Understand what your future agents are actually doing.
+
+### Learn
+
+* [ ] Prompt engineering
+* [ ] Context
+* [ ] Tool calling
+* [ ] Function calling
+* [ ] Structured output
+* [ ] RAG
+* [ ] Embeddings
+* [ ] Vector databases
+* [ ] Memory
+* [ ] Planning
+* [ ] Agent loop
+* [ ] Reflection
+* [ ] Evaluation
+* [ ] Guardrails
+
+### Understand this loop
+
+```text
+User
+ ↓
+Agent
+ ↓
+Think/Plan
+ ↓
+Choose tool
+ ↓
+Tool executes
+ ↓
+Observation
+ ↓
+Agent
+ ↓
+Final response
+```
+
+### Deliverable
+
+* [ ] Build one simple agent.
+* [ ] Give it one tool.
+* [ ] Make it call the tool.
+* [ ] Return the result to the user.
+
+Do NOT build a swarm yet.
+
+---
+
+# PHASE 12 — Build the Tool System
+
+## Goal
+
+Create a standard interface for tools.
+
+Define something like:
+
+```text
+Tool
+├── name
+├── description
+├── input_schema
+├── permission
+├── execute()
+└── result
+```
+
+### First tools
+
+* [ ] Calculator
+* [ ] Python execution
+* [ ] File reader
+* [ ] File writer
+* [ ] Database query
+* [ ] Web search
+
+### Security
+
+* [ ] Tool permissions
+* [ ] Input validation
+* [ ] Output validation
+* [ ] Timeouts
+* [ ] Resource limits
+* [ ] Logging
+* [ ] User approval
+
+### Deliverable
+
+* [ ] Agent can discover available tools.
+* [ ] Agent can choose a tool.
+* [ ] Agent can execute the tool.
+* [ ] Tool execution is logged.
+
+---
+
+# PHASE 13 — Build the Dataset Agent
+
+## Goal
+
+Turn your normal ML code into an agent capability.
+
+### Dataset profiler
+
+* [ ] Detect file type.
+* [ ] Detect columns.
+* [ ] Detect data types.
+* [ ] Detect missing values.
+* [ ] Detect duplicates.
+* [ ] Detect outliers.
+* [ ] Detect class imbalance.
+* [ ] Detect suspicious columns.
+* [ ] Detect potential leakage.
+* [ ] Generate statistics.
+* [ ] Generate visualizations.
+
+### Dataset Agent
+
+```text
+User
+ ↓
+Dataset Agent
+ ↓
+Dataset Profiler
+ ↓
+Analysis
+ ↓
+Explanation
+```
+
+### Deliverable
+
+User uploads a dataset and asks:
+
+> "Analyze this dataset."
+
+The agent should produce a useful technical report.
+
+---
+
+# PHASE 14 — Build the ML Experiment Engine
+
+## Goal
+
+Run experiments automatically.
+
+### Build
+
+* [ ] Experiment definition.
+* [ ] Experiment ID.
+* [ ] Dataset version.
+* [ ] Feature version.
+* [ ] Model.
+* [ ] Hyperparameters.
+* [ ] Metrics.
+* [ ] Runtime.
+* [ ] Compute.
+* [ ] Cost.
+* [ ] Model artifact.
+* [ ] Logs.
+
+### Experiment pipeline
+
+```text
+Dataset
+ ↓
+Preprocessing
+ ↓
+Feature Engineering
+ ↓
+Training
+ ↓
+Evaluation
+ ↓
+Metrics
+ ↓
+Artifact
+```
+
+### AWS
+
+Learn:
+
+* [ ] AWS Batch
+* [ ] SageMaker AI
+* [ ] ECR
+* [ ] Compute types
+* [ ] CPU vs GPU
+
+### Deliverable
+
+* [ ] Run multiple experiments.
+* [ ] Run them independently.
+* [ ] Store results.
+* [ ] Compare results.
+
+---
+
+# PHASE 15 — Build the Model Ranking Engine
+
+## Goal
+
+Automatically determine which model is best.
+
+### Define ranking criteria
+
+* [ ] Accuracy
+* [ ] F1
+* [ ] Precision
+* [ ] Recall
+* [ ] AUC
+* [ ] Training time
+* [ ] Inference time
+* [ ] Memory
+* [ ] Compute cost
+* [ ] Model complexity
+
+### Build
+
+```text
+Experiments
+     ↓
+Evaluation Engine
+     ↓
+Ranking Engine
+     ↓
+Ranked Models
+```
+
+### Example output
+
+```text
+1. XGBoost      91.4%
+2. LightGBM     90.9%
+3. RandomForest 89.8%
+4. Logistic     83.4%
+```
+
+### Deliverable
+
+* [ ] User can select the best model.
+* [ ] User can select another model.
+* [ ] Agent can recommend a model.
+
+---
+
+# PHASE 16 — Build the Autonomous Improvement Loop
+
+## Goal
+
+Implement your original idea:
+
+> "If the result isn't good enough, keep improving."
+
+### Learn
+
+* [ ] Optimization loops
+* [ ] Search spaces
+* [ ] Hyperparameter optimization
+* [ ] Experiment budgets
+* [ ] Time limits
+* [ ] Compute limits
+* [ ] Stopping criteria
+
+### Build
+
+```text
+Goal
+ ↓
+Analyze
+ ↓
+Plan
+ ↓
+Experiment
+ ↓
+Evaluate
+ ↓
+Good enough?
+ ├── YES → User
+ └── NO
+      ↓
+   Improve
+      ↓
+   Experiment
+```
+
+### Add limits
+
+* [ ] Maximum time
+* [ ] Maximum experiments
+* [ ] Maximum compute
+* [ ] Maximum cost
+* [ ] Minimum improvement
+* [ ] User approval
+
+### Deliverable
+
+User says:
+
+> "Improve this model within 30 minutes."
+
+ML Assistant should autonomously run a controlled improvement process.
+
+---
+
+# PHASE 17 — Build Research Agent
+
+## Goal
+
+Allow ML Assistant to research solutions.
+
+### Learn
+
+* [ ] Web search
+* [ ] Web page extraction
+* [ ] APIs
+* [ ] RAG
+* [ ] Citations
+* [ ] Source evaluation
+* [ ] Research summarization
+
+### Build
+
+```text
+Research Agent
+ ↓
+Search
+ ↓
+Read sources
+ ↓
+Extract information
+ ↓
+Compare sources
+ ↓
+Return findings
+```
+
+### Connect research to ML
+
+Example:
+
+```text
+Model performance poor
+       ↓
+Research Agent
+       ↓
+Find relevant techniques
+       ↓
+Recommend feature/model changes
+       ↓
+ML Agent
+       ↓
+New experiments
+```
+
+---
+
+# PHASE 18 — Build GitHub Agent
+
+## Goal
+
+Allow the assistant to work with real projects.
+
+### Learn
+
+* [ ] GitHub API
+* [ ] Repository
+* [ ] Branch
+* [ ] Commit
+* [ ] Pull request
+* [ ] Issue
+* [ ] Diff
+* [ ] Code review
+
+### Build tools
+
+* [ ] List repositories.
+* [ ] Read repository.
+* [ ] Read files.
+* [ ] Create branch.
+* [ ] Modify files.
+* [ ] Run tests.
+* [ ] Create commit.
+* [ ] Create pull request.
+* [ ] Review changes.
+
+### Safety
+
+Require approval for:
+
+* [ ] Merge
+* [ ] Delete
+* [ ] Production changes
+* [ ] Destructive operations
+
+### Deliverable
+
+User can tell ML Assistant:
+
+> "Create a branch and improve the preprocessing code."
+
+---
+
+# PHASE 19 — Build the Database/ERD Workspace
+
+## Goal
+
+Give users a separate engineering workspace for databases.
+
+### Build
+
+* [ ] Database schema viewer.
+* [ ] SQL editor.
+* [ ] Table viewer.
+* [ ] Schema analyzer.
+* [ ] ERD generator.
+* [ ] ERD editor.
+* [ ] SQL generator.
+* [ ] Migration generator.
+
+### Flow
+
+```text
+Database
+ ↓
+Schema Analyzer
+ ↓
+Structured Schema
+ ↓
+ERD Generator
+ ↓
+Interactive Diagram
+```
+
+### Deliverable
+
+* [ ] Connect a database.
+* [ ] Read its schema.
+* [ ] Generate ERD.
+* [ ] Explain relationships.
+* [ ] Generate SQL.
+
+---
+
+# PHASE 20 — Build Document Generation
+
+## Goal
+
+Turn project information into professional artifacts.
+
+### Generate
+
+* [ ] Markdown
+* [ ] TXT
+* [ ] PDF
+* [ ] DOCX
+* [ ] Research reports
+* [ ] Technical reports
+* [ ] Experiment reports
+
+### System
+
+```text
+Project Data
+     ↓
+Content Planner
+     ↓
+Writer
+     ↓
+Formatter
+     ↓
+Document
+     ↓
+S3
+```
+
+### Deliverable
+
+* [ ] Generate an experiment report automatically.
+
+---
+
+# PHASE 21 — Build Presentation Generation
+
+## Goal
+
+Generate professional presentations.
+
+### Learn
+
+* [ ] Presentation structure.
+* [ ] Slide hierarchy.
+* [ ] Charts.
+* [ ] Tables.
+* [ ] Images.
+* [ ] Speaker notes.
+
+### Build
+
+```text
+Research / Experiment
+        ↓
+Presentation Planner
+        ↓
+Slide Generator
+        ↓
+PPTX
+        ↓
+S3
+```
+
+### Deliverable
+
+* [ ] User can say:
+  "Create a presentation explaining my model."
+
+---
+
+# PHASE 22 — Build Image/Visualization Generation
+
+## Goal
+
+Generate visual material for projects.
+
+### Build
+
+* [ ] ML charts.
+* [ ] Architecture diagrams.
+* [ ] ER diagrams.
+* [ ] Flow diagrams.
+* [ ] Presentation graphics.
+* [ ] Generated images.
+
+### Important principle
+
+Separate:
+
+```text
+Data visualization
+```
+
+from:
+
+```text
+AI-generated images
+```
+
+Data visualizations should be generated from actual data.
+
+---
+
+# PHASE 23 — Build Session Memory
+
+## Goal
+
+Make ML Assistant remember project context.
+
+### Store
+
+* [ ] Conversation history.
+* [ ] Project information.
+* [ ] User preferences.
+* [ ] Important decisions.
+* [ ] Experiment history.
+* [ ] Agent actions.
+* [ ] Tool calls.
+* [ ] Artifacts.
+* [ ] Research findings.
+
+### Learn
+
+* [ ] Short-term memory.
+* [ ] Long-term memory.
+* [ ] Vector embeddings.
+* [ ] RAG.
+* [ ] Context retrieval.
+
+### Architecture
+
+```text
+Conversation
+      ↓
+Memory Manager
+      ↓
+ ┌────┴─────┐
+ ↓          ↓
+SQL       Vector DB
+ ↓          ↓
+Facts     Semantic memory
+```
+
+---
+
+# PHASE 24 — Build Agent Manager
+
+## Goal
+
+Move from one agent to multiple specialized agents.
+
+### First agents
+
+* [ ] Manager Agent
+* [ ] ML Agent
+* [ ] Coding Agent
+* [ ] Research Agent
+* [ ] Data Agent
+* [ ] Document Agent
+
+### Architecture
+
+```text
+                    USER
+                      ↓
+                 MANAGER AGENT
+                      ↓
+       ┌──────────────┼──────────────┐
+       ↓              ↓              ↓
+    ML Agent      Code Agent    Research Agent
+       ↓              ↓              ↓
+    ML Tools       GitHub         Web Tools
+```
+
+### Deliverable
+
+* [ ] Manager can delegate tasks.
+* [ ] Agents return results.
+* [ ] Manager summarizes results for user.
+
+---
+
+# PHASE 25 — Build Agent-to-Agent Communication
+
+## Goal
+
+Allow agents to communicate without everything passing directly through the user.
+
+### Learn
+
+* [ ] Message queues.
+* [ ] Events.
+* [ ] Async processing.
+* [ ] Event-driven architecture.
+* [ ] SQS.
+* [ ] EventBridge.
+* [ ] Step Functions.
+
+### Build
+
+```text
+Manager
+ ↓
+Task
+ ↓
+ML Agent
+ ↓
+Event
+ ↓
+Manager
+ ↓
+Research Agent
+ ↓
+Event
+ ↓
+Manager
+```
+
+### Every agent message should contain
+
+* [ ] Sender
+* [ ] Receiver
+* [ ] Task ID
+* [ ] Message type
+* [ ] Input
+* [ ] Result
+* [ ] Status
+* [ ] Timestamp
+* [ ] Error information
+
+---
+
+# PHASE 26 — Build the Agent Swarm
+
+## Goal
+
+Allow multiple agents to work on a complex problem simultaneously.
+
+### Example
+
+User:
+
+> "Improve my ML project."
+
+Manager creates:
+
+```text
+                    Manager
+                       │
+        ┌──────────────┼───────────────┐
+        ↓              ↓               ↓
+   Data Agent     Research Agent   Code Agent
+        │              │               │
+        └──────────────┼───────────────┘
+                       ↓
+                Experiment Agent
+                       ↓
+                 Evaluation
+                       ↓
+                    Manager
+                       ↓
+                     USER
+```
+
+### Add
+
+* [ ] Parallel tasks.
+* [ ] Dependencies.
+* [ ] Task priorities.
+* [ ] Task cancellation.
+* [ ] Retry.
+* [ ] Timeout.
+* [ ] Agent status.
+* [ ] User approval.
+* [ ] Budget limits.
+
+---
+
+# PHASE 27 — Learn AgentCore
+
+## Goal
+
+Move your agent infrastructure toward production-grade AWS agent architecture.
+
+### Learn
+
+* [ ] Agent runtime.
+* [ ] Sessions.
+* [ ] Agent identity.
+* [ ] Tool connectivity.
+* [ ] Memory.
+* [ ] Observability.
+* [ ] Policies.
+* [ ] Agent lifecycle.
+
+### Build
+
+* [ ] Move your basic agent to AgentCore where appropriate.
+* [ ] Test persistent sessions.
+* [ ] Test model switching.
+* [ ] Test tool access.
+* [ ] Test permissions.
+
+---
+
+# PHASE 28 — Security
+
+## Goal
+
+Make sure your autonomous system cannot destroy things.
+
+### Learn
+
+* [ ] IAM.
+* [ ] Least privilege.
+* [ ] Secrets Manager.
+* [ ] KMS.
+* [ ] Encryption.
+* [ ] Authentication.
+* [ ] Authorization.
+* [ ] OAuth.
+* [ ] API security.
+* [ ] Input validation.
+* [ ] Prompt injection.
+* [ ] Tool injection.
+* [ ] Data isolation.
+
+### Implement
+
+* [ ] User isolation.
+* [ ] Project isolation.
+* [ ] Agent permissions.
+* [ ] Tool permissions.
+* [ ] GitHub permissions.
+* [ ] Database permissions.
+* [ ] Resource limits.
+* [ ] Cost limits.
+* [ ] Human approval for dangerous actions.
+
+---
+
+# PHASE 29 — Observability
+
+## Goal
+
+Know what your agents are doing.
+
+### Learn
+
+* [ ] Logs.
+* [ ] Metrics.
+* [ ] Traces.
+* [ ] Latency.
+* [ ] Errors.
+* [ ] Token usage.
+* [ ] Model cost.
+* [ ] Agent execution traces.
+
+### Build
+
+Track:
+
+```text
+User request
+ ↓
+Manager
+ ↓
+Agent
+ ↓
+Tool
+ ↓
+AWS service
+ ↓
+Result
+```
+
+### Store
+
+* [ ] Request ID
+* [ ] Session ID
+* [ ] Agent ID
+* [ ] Tool ID
+* [ ] Model ID
+* [ ] Latency
+* [ ] Token usage
+* [ ] Cost
+* [ ] Errors
+
+### AWS
+
+* [ ] CloudWatch
+* [ ] CloudTrail
+* [ ] Agent observability
+
+---
+
+# PHASE 30 — Cost Management
+
+## Goal
+
+Prevent your AI platform from becoming extremely expensive.
+
+### Learn
+
+* [ ] AWS pricing.
+* [ ] LLM token pricing.
+* [ ] Storage pricing.
+* [ ] Compute pricing.
+* [ ] GPU pricing.
+* [ ] Data transfer.
+* [ ] Serverless pricing.
+
+### Implement
+
+* [ ] Per-user budget.
+* [ ] Per-project budget.
+* [ ] Per-task budget.
+* [ ] Maximum experiment cost.
+* [ ] Maximum LLM tokens.
+* [ ] Maximum runtime.
+* [ ] Model selection based on cost.
+* [ ] Automatic stopping.
+
+### Example
+
+```text
+User:
+"Improve my model."
+
+Budget:
+$5
+
+Time:
+30 minutes
+
+Experiments:
+Maximum 20
+
+LLM:
+Maximum 100k tokens
+```
+
+---
+
+# PHASE 31 — Production Architecture
+
+## Goal
+
+Turn the project into a serious cloud application.
+
+### Infrastructure
+
+* [ ] ECS/Fargate.
+* [ ] Load balancing.
+* [ ] Auto scaling.
+* [ ] Private networking.
+* [ ] Database backups.
+* [ ] S3 versioning.
+* [ ] Disaster recovery.
+* [ ] Monitoring.
+* [ ] Alerting.
+
+### Architecture
+
+```text
+                         Internet
+                            │
+                       CloudFront
+                            │
+                         ALB/API
+                            │
+                    ┌───────┴────────┐
+                    │                │
+                Frontend           API
+                                     │
+                              ┌──────┴──────┐
+                              │             │
+                           Agents        Services
+                              │             │
+                 ┌────────────┼─────────────┤
+                 │            │             │
+              Bedrock      Step Fn       Queues
+                 │            │             │
+                 └────────────┼─────────────┘
+                              │
+                 ┌────────────┼─────────────┐
+                 │            │             │
+              Aurora         S3          ML Compute
+```
+
+---
+
+# PHASE 32 — CI/CD
+
+## Goal
+
+Make deployment automatic.
+
+### Learn
+
+* [ ] Continuous integration.
+* [ ] Continuous deployment.
+* [ ] Automated tests.
+* [ ] Docker builds.
+* [ ] Environment variables.
+* [ ] Development environment.
+* [ ] Staging environment.
+* [ ] Production environment.
+
+### Build
+
+```text
+GitHub
+ ↓
+Pull Request
+ ↓
+Tests
+ ↓
+Build Docker
+ ↓
+Security checks
+ ↓
+Deploy staging
+ ↓
+Approval
+ ↓
+Production
+```
+
+---
+
+# PHASE 33 — Testing
+
+## Goal
+
+Test the AI system like real software.
+
+### Traditional testing
+
+* [ ] Unit tests.
+* [ ] Integration tests.
+* [ ] API tests.
+* [ ] Database tests.
+* [ ] End-to-end tests.
+
+### AI testing
+
+* [ ] Prompt tests.
+* [ ] Agent behavior tests.
+* [ ] Tool-use tests.
+* [ ] Hallucination tests.
+* [ ] RAG evaluation.
+* [ ] Model evaluation.
+* [ ] Regression tests.
+* [ ] Safety tests.
+
+### Agent tests
+
+Test:
+
+```text
+User request
+ ↓
+Expected plan
+ ↓
+Expected tools
+ ↓
+Expected result
+```
+
+---
+
+# PHASE 34 — Final ML Assistant Integration
+
+## Goal
+
+Connect all the systems.
+
+### User
+
+* [ ] Login.
+* [ ] Create project.
+* [ ] Upload dataset.
+* [ ] Chat.
+* [ ] Select model.
+* [ ] Run ML experiments.
+* [ ] View rankings.
+* [ ] Ask for improvements.
+* [ ] Approve/reject actions.
+* [ ] Connect GitHub.
+* [ ] Generate ERD.
+* [ ] Research.
+* [ ] Generate report.
+* [ ] Generate PPT.
+* [ ] Generate images.
+* [ ] View history.
+* [ ] Use single-agent mode.
+* [ ] Use multi-agent mode.
+
+### Manager
+
+* [ ] Understand user goal.
+* [ ] Plan task.
+* [ ] Delegate.
+* [ ] Monitor.
+* [ ] Combine results.
+* [ ] Ask for approval.
+* [ ] Report final result.
+
+### ML Agent
+
+* [ ] Analyze data.
+* [ ] Clean data.
+* [ ] Engineer features.
+* [ ] Train models.
+* [ ] Evaluate.
+* [ ] Rank.
+* [ ] Improve.
+
+### Research Agent
+
+* [ ] Search.
+* [ ] Read.
+* [ ] Compare.
+* [ ] Cite.
+* [ ] Recommend.
+
+### Coding Agent
+
+* [ ] Read code.
+* [ ] Modify code.
+* [ ] Test.
+* [ ] Commit.
+* [ ] Create PR.
+
+### Document Agent
+
+* [ ] Report.
+* [ ] Research paper.
+* [ ] Documentation.
+* [ ] PPT.
+* [ ] Other artifacts.
+
+---
+
+# PHASE 35 — ML Assistant V1
+
+## V1 should contain ONLY this
+
+* [ ] User authentication.
+* [ ] Project creation.
+* [ ] Chat.
+* [ ] Persistent sessions.
+* [ ] One or more LLMs.
+* [ ] Model switching.
+* [ ] File upload.
+* [ ] S3 storage.
+* [ ] Dataset analysis.
+* [ ] Basic ML experiments.
+* [ ] Model comparison.
+* [ ] Basic report generation.
+
+### V1 architecture
+
+```text
+             USER
+               │
+               ▼
+          Web Interface
+               │
+               ▼
+           API Server
+               │
+       ┌───────┼────────┐
+       ▼       ▼        ▼
+    Bedrock  Aurora     S3
+       │
+       ▼
+    ML Agent
+       │
+       ▼
+   ML Compute
+```
+
+**Stop here and make V1 stable before expanding.**
+
+---
+
+# PHASE 36 — ML Assistant V2
+
+## Add
+
+* [ ] Tool system.
+* [ ] Research agent.
+* [ ] GitHub agent.
+* [ ] Database/ERD workspace.
+* [ ] RAG.
+* [ ] Long-term memory.
+* [ ] Document generation.
+* [ ] PPT generation.
+* [ ] Better ML optimization.
+
+---
+
+# PHASE 37 — ML Assistant V3
+
+## Add
+
+* [ ] Manager agent.
+* [ ] Multiple specialized agents.
+* [ ] Agent-to-agent messaging.
+* [ ] SQS.
+* [ ] EventBridge.
+* [ ] Step Functions.
+* [ ] AgentCore.
+* [ ] Parallel execution.
+* [ ] Human-in-the-loop.
+* [ ] Cost-aware execution.
+
+---
+
+# PHASE 38 — ML Assistant V4
+
+## Advanced autonomous system
+
+* [ ] Autonomous experiment planning.
+* [ ] Autonomous research.
+* [ ] Autonomous code modification.
+* [ ] Autonomous testing.
+* [ ] Autonomous GitHub PR creation.
+* [ ] Automatic model improvement.
+* [ ] Multi-agent collaboration.
+* [ ] Budget-aware planning.
+* [ ] Time-aware planning.
+* [ ] Compute-aware planning.
+* [ ] Model-aware planning.
+* [ ] Self-evaluation.
+* [ ] Continuous improvement.
+
+---
+
+# THE LEARNING ORDER
+
+When you are unsure what to study next, follow this exact order:
+
+* [ ] Python
+* [ ] Git/GitHub
+* [ ] Linux
+* [ ] REST APIs
+* [ ] SQL
+* [ ] PostgreSQL
+* [ ] Machine Learning
+* [ ] Docker
+* [ ] Cloud fundamentals
+* [ ] AWS IAM
+* [ ] AWS S3
+* [ ] AWS VPC
+* [ ] AWS EC2
+* [ ] AWS ECS/Fargate
+* [ ] AWS Aurora
+* [ ] AWS Bedrock
+* [ ] LLM fundamentals
+* [ ] Agent fundamentals
+* [ ] Tool calling
+* [ ] RAG/embeddings
+* [ ] AWS Batch
+* [ ] SageMaker AI
+* [ ] SQS
+* [ ] EventBridge
+* [ ] Step Functions
+* [ ] AgentCore
+* [ ] Distributed systems
+* [ ] Security
+* [ ] Observability
+* [ ] CI/CD
+* [ ] Production architecture
+
+---
+
+# THE "AM I READY?" CHECKPOINTS
+
+## Before building agents
+
+You should understand:
+
+* [ ] Python
+* [ ] APIs
+* [ ] Databases
+* [ ] ML basics
+* [ ] LLM basics
+
+## Before building the ML agent
+
+You should understand:
+
+* [ ] Dataset
+* [ ] Features
+* [ ] Models
+* [ ] Evaluation
+* [ ] Experiments
+* [ ] Hyperparameters
+
+## Before building the swarm
+
+You should understand:
+
+* [ ] Agent
+* [ ] Tool
+* [ ] Memory
+* [ ] Queue
+* [ ] Event
+* [ ] Workflow
+* [ ] Async processing
+
+## Before autonomous execution
+
+You should understand:
+
+* [ ] IAM
+* [ ] Permissions
+* [ ] Security
+* [ ] Cost controls
+* [ ] Timeouts
+* [ ] Retries
+* [ ] Human approval
+* [ ] Observability
+
+---
+
+# YOUR FIRST 10 STEPS
+
+Do NOT think about the entire roadmap every day.
+
+Your immediate path is only:
+
+* [ ] **1. Learn Python well enough to build a backend.**
+* [ ] **2. Learn Git/GitHub.**
+* [ ] **3. Learn REST APIs.**
+* [ ] **4. Learn SQL + PostgreSQL.**
+* [ ] **5. Build a small local ML project that trains multiple models.**
+* [ ] **6. Learn basic AWS concepts + IAM.**
+* [ ] **7. Learn S3 and upload your first dataset.**
+* [ ] **8. Learn Docker and containerize your backend.**
+* [ ] **9. Deploy the backend to AWS.**
+* [ ] **10. Add your first LLM through Bedrock.**
+
+After those ten steps, you will have the foundation to start turning the idea into the real ML Assistant.
+
+---
+
+# CORE RULE FOR THE WHOLE PROJECT
+
+For every new technology, answer these five questions:
+
+1. **What problem does it solve?**
+2. **Why does ML Assistant need it?**
+3. **What happens if I don't use it?**
+4. **What does it communicate with?**
+5. **Can I build a tiny example with it?**
+
+If you can't answer those questions, don't add the technology yet.
+
+---
+
+# FINAL ARCHITECTURE GOAL
+
+Eventually, ML Assistant should evolve toward:
+
+```text
+                              USER
+                                │
+                                ▼
+                         ML ASSISTANT UI
+                                │
+                                ▼
+                         PROJECT MANAGER
+                                │
+                                ▼
+                         MANAGER AGENT
+                                │
+              ┌─────────────────┼─────────────────┐
+              │                 │                 │
+              ▼                 ▼                 ▼
+          ML AGENT         CODE AGENT       RESEARCH AGENT
+              │                 │                 │
+              ▼                 ▼                 ▼
+       ML COMPUTE            GitHub            Web/APIs
+              │
+              ▼
+        EXPERIMENT ENGINE
+              │
+              ▼
+        EVALUATION ENGINE
+              │
+              ▼
+         RANKING ENGINE
+              │
+              ▼
+          MODEL STORE
+
+
+        ┌────────────────────────────────────────────┐
+        │              SHARED PLATFORM               │
+        │                                            │
+        │  LLMs        Tools       Memory            │
+        │  Bedrock     GitHub      Aurora            │
+        │              Web         pgvector          │
+        │              Python      S3                │
+        │                                            │
+        │  Events      Queues      Workflows         │
+        │  EventBridge SQS         Step Functions    │
+        │                                            │
+        │  Security    Monitoring  Cost Control      │
+        │  IAM         CloudWatch  Budgets           │
+        └────────────────────────────────────────────┘
+```
+
+**Your goal isn't to finish this entire checklist quickly.**
+
+Your goal is to reach the point where, at each stage, you can say:
+
+> **"I understand why this component exists, I know how it works, and I built it myself."**
+
+That approach will make the project both a **serious portfolio project** and a very strong way to learn cloud engineering, ML engineering, LLMs, and agentic systems at the same time.
