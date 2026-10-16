@@ -1251,3 +1251,44 @@ Then build the system one milestone at a time.
 > **Learn → Build → Test → Understand → Document → Improve.**
 
 That's how ML Assistant will be built.
+
+---
+
+## 🚀 Quickstart (run from a fresh clone)
+
+The app is self-contained: it creates its runtime directories
+(`automl_outputs/`, `uploads/`) and local SQLite/DuckDB files on first start,
+so nothing generated needs to be committed.
+
+```bash
+# 1. Clone and enter
+git clone https://github.com/<you>/ml-assistant-automl.git
+cd ml-assistant-automl
+
+# 2. Create a virtual environment and install the backend + dev deps
+python3 -m venv backend/.venv
+backend/.venv/bin/python -m pip install --upgrade pip
+backend/.venv/bin/pip install -e "backend[dev]"
+
+# 3. (optional) local config — defaults work fully offline
+cp backend/.env.example backend/.env
+
+# 4. Run the server FROM THE REPO ROOT
+backend/.venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```
+
+Then open:
+
+- **Workspace UI**: http://localhost:8000/workspace
+- **API docs**: http://localhost:8000/docs
+
+Run the tests from the repo root:
+
+```bash
+backend/.venv/bin/python -m pytest tests/ -q
+```
+
+> **Note:** the app runs fully offline by default (`LLM_PROVIDER=local`,
+> SQLite + DuckDB, offline paper bank). PostgreSQL/Redis/Celery are optional
+> and only used if you enable them. There is **no authentication** — see
+> `.agent/SECURITY_LIMITATIONS.md` before exposing it beyond localhost.
