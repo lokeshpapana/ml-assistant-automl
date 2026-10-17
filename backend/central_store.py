@@ -109,7 +109,9 @@ class CentralStore:
             import sqlite3
 
             self._backend = "sqlite"
-            self._conn = sqlite3.connect(":memory:" if self._memory else self._db_path, check_same_thread=False)
+            self._conn = sqlite3.connect(
+                ":memory:" if self._memory else self._db_path, check_same_thread=False
+            )
         self._refresh_schema_if_exists()
 
     def reset(self) -> None:
@@ -147,8 +149,10 @@ class CentralStore:
         return self._conn.execute(sql).fetchall()
 
     def _refresh_schema(self) -> None:
-        rows = self._fetchall(f"PRAGMA table_info({_quote(_TABLE)})") if self._backend == "sqlite" else self._fetchall(
-            f"DESCRIBE {_quote(_TABLE)}"
+        rows = (
+            self._fetchall(f"PRAGMA table_info({_quote(_TABLE)})")
+            if self._backend == "sqlite"
+            else self._fetchall(f"DESCRIBE {_quote(_TABLE)}")
         )
         self._columns = []
         self._dtypes = {}
@@ -170,7 +174,9 @@ class CentralStore:
         """
         with self._lock:
             try:
-                if self._exec(f"SELECT count(*) FROM sqlite_master WHERE type='table' AND name={_quote(_TABLE)}").fetchall():
+                if self._exec(
+                    f"SELECT count(*) FROM sqlite_master WHERE type='table' AND name={_quote(_TABLE)}"
+                ).fetchall():
                     self._refresh_schema()
             except Exception:
                 try:
@@ -181,7 +187,9 @@ class CentralStore:
 
     # ------------------------------------------------------------------ loading
 
-    def load_dataframe(self, df: pd.DataFrame, max_rows: int | None = None, sample_method: str = "random") -> dict[str, Any]:
+    def load_dataframe(
+        self, df: pd.DataFrame, max_rows: int | None = None, sample_method: str = "random"
+    ) -> dict[str, Any]:
         """Load a DataFrame into the single table, applying an optional row limit."""
         with self._lock:
             self.reset()
@@ -263,22 +271,28 @@ class CentralStore:
         and either numeric min/mean/std/max or the top categorical values.
         """
         with self._lock:
-            cols = list(self._columns)[:int(limit)]
+            cols = list(self._columns)[: int(limit)]
             out: dict[str, Any] = {}
             for col in cols:
                 name = _quote(col)
                 dtype = str(self._dtypes.get(col, "")).upper()
-                numeric = any(k in dtype for k in ("INT", "DOUBLE", "FLOAT", "DECIMAL", "REAL", "NUMERIC"))
+                numeric = any(
+                    k in dtype for k in ("INT", "DOUBLE", "FLOAT", "DECIMAL", "REAL", "NUMERIC")
+                )
                 base = {
                     "type": self._dtypes.get(col, ""),
-                    "nulls": int(self._fetchall(
-                        f"SELECT COUNT(*) - COUNT({name}) FROM {_quote(_TABLE)}"
-                    )[0][0] or 0),
+                    "nulls": int(
+                        self._fetchall(f"SELECT COUNT(*) - COUNT({name}) FROM {_quote(_TABLE)}")[0][
+                            0
+                        ]
+                        or 0
+                    ),
                 }
                 try:
-                    base["uniques"] = int(self._fetchall(
-                        f"SELECT COUNT(DISTINCT {name}) FROM {_quote(_TABLE)}"
-                    )[0][0] or 0)
+                    base["uniques"] = int(
+                        self._fetchall(f"SELECT COUNT(DISTINCT {name}) FROM {_quote(_TABLE)}")[0][0]
+                        or 0
+                    )
                 except Exception:
                     base["uniques"] = None
                 total = self._fetchall(f"SELECT COUNT(*) FROM {_quote(_TABLE)}")[0][0] or 1
@@ -288,19 +302,23 @@ class CentralStore:
                         f"SELECT MIN({name}), AVG({name}), STDDEV({name}), MAX({name}) "
                         f"FROM {_quote(_TABLE)} WHERE {name} IS NOT NULL"
                     )[0]
-                    base.update({
-                        "min": _json_num(row[0]),
-                        "mean": _json_num(row[1]),
-                        "std": _json_num(row[2]),
-                        "max": _json_num(row[3]),
-                    })
+                    base.update(
+                        {
+                            "min": _json_num(row[0]),
+                            "mean": _json_num(row[1]),
+                            "std": _json_num(row[2]),
+                            "max": _json_num(row[3]),
+                        }
+                    )
                 else:
                     try:
                         tops = self._fetchall(
                             f"SELECT {name}, COUNT(*) c FROM {_quote(_TABLE)} "
                             f"WHERE {name} IS NOT NULL GROUP BY {name} ORDER BY c DESC, {name} LIMIT 5"
                         )
-                        base["top"] = [_json_num(t[0]) if _is_number(t[0]) else str(t[0]) for t in tops]
+                        base["top"] = [
+                            _json_num(t[0]) if _is_number(t[0]) else str(t[0]) for t in tops
+                        ]
                     except Exception:
                         base["top"] = []
                 out[col] = base
@@ -364,7 +382,12 @@ class CentralStore:
                         self._assign_from_pandas(name, self._compute_bins(col, nbins))
                 elif kind in ("year", "month", "day", "dayofweek"):
                     col = self._require_column(feature.get("source") or feature.get("a", ""))
-                    part = {"year": "YEAR", "month": "MONTH", "day": "DAY", "dayofweek": "DAYOFWEEK"}[kind]
+                    part = {
+                        "year": "YEAR",
+                        "month": "MONTH",
+                        "day": "DAY",
+                        "dayofweek": "DAYOFWEEK",
+                    }[kind]
                     self._add_column(name, "DOUBLE")
                     self._exec(
                         f"UPDATE {_quote(_TABLE)} SET {_quote(name)} = CAST(EXTRACT({part} FROM CAST({_quote(col)} AS TIMESTAMP)) AS DOUBLE)"
@@ -374,14 +397,18 @@ class CentralStore:
                     self._add_column(name, "DOUBLE")
                     self._exec(f"UPDATE {_quote(_TABLE)} SET {_quote(name)} = {expr}")
             except Exception as exc:
-                raise ValueError(f"Feature engineering failed for '{name}' ({kind}): {exc}") from exc
+                raise ValueError(
+                    f"Feature engineering failed for '{name}' ({kind}): {exc}"
+                ) from exc
 
             self._refresh_schema()
             log_entry = dict(feature)
             log_entry["name"] = name
             log_entry["applied_ts"] = time.time()
             self.feature_log.append(log_entry)
-            self.op_log.append({"op": "add", "name": name, "kind": kind, "ts": log_entry["applied_ts"]})
+            self.op_log.append(
+                {"op": "add", "name": name, "kind": kind, "ts": log_entry["applied_ts"]}
+            )
             return log_entry
 
     def drop_column(self, name: str) -> None:
@@ -434,7 +461,11 @@ class CentralStore:
         DuckDB and SQLite both support: CASE WHEN, NULLIF, ABS, SQRT, POWER,
         LN (SQLite >= 3.35 with math functions; fall back to Python if missing).
         """
-        cols = {k: self._require_column(v) for k, v in feature.items() if k in ("a", "b") and isinstance(v, str)}
+        cols = {
+            k: self._require_column(v)
+            for k, v in feature.items()
+            if k in ("a", "b") and isinstance(v, str)
+        }
         a = _quote(cols.get("a", feature.get("a", "")))
         b = _quote(cols.get("b", feature.get("b", "")))
 

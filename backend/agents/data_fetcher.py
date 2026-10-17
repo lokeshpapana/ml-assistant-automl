@@ -18,12 +18,16 @@ from backend.agents.common import Requirements, detect_task
 from backend.central_store import get_central_store
 
 
-def build_synthetic_dataset(goal: str = "", rows: int = 2_000, task_type: str = "auto") -> pd.DataFrame:
+def build_synthetic_dataset(
+    goal: str = "", rows: int = 2_000, task_type: str = "auto"
+) -> pd.DataFrame:
     """Generate a deterministic demo dataset with numeric, categorical & datetime cols."""
     goal = goal.lower()
     rng = np.random.RandomState(42)
 
-    if "regress" in task_type or any(k in goal for k in ("price", "salary", "sales", "score", "temperature")):
+    if "regress" in task_type or any(
+        k in goal for k in ("price", "salary", "sales", "score", "temperature")
+    ):
         base = [
             rng.normal(6_000, 1_200, rows),
             rng.lognormal(3.2, 0.55, rows),
@@ -31,7 +35,14 @@ def build_synthetic_dataset(goal: str = "", rows: int = 2_000, task_type: str = 
             rng.randint(18, 85, rows),
             rng.uniform(40, 120, rows),
         ]
-        target = 20_000 + 2.1 * base[0] - 180 * base[2] + 0.9 * base[3] + 25 * base[4] + rng.normal(0, 1_500, rows)
+        target = (
+            20_000
+            + 2.1 * base[0]
+            - 180 * base[2]
+            + 0.9 * base[3]
+            + 25 * base[4]
+            + rng.normal(0, 1_500, rows)
+        )
         task = "regression"
         names = ["size_sqft", "income", "bedrooms", "age", "quality"]
     else:
@@ -72,7 +83,13 @@ class DataFetcherAgent:
         emit: Callable[[dict[str, Any]], None],
     ) -> dict[str, Any]:
         """Load the dataset into the single central store and detect the ML task."""
-        emit({"type": "agent_message", "agent": "data-fetcher", "text": "Ingesting dataset into the single central store…"})
+        emit(
+            {
+                "type": "agent_message",
+                "agent": "data-fetcher",
+                "text": "Ingesting dataset into the single central store…",
+            }
+        )
 
         df, source = self._obtain(requirements)
         n_before = len(df)
@@ -158,7 +175,9 @@ class DataFetcherAgent:
                 return df, "openml"
         if src == "existing":
             return self.store.to_dataframe(), "existing central store"
-        return build_synthetic_dataset(requirements.goal, max(requirements.max_rows, 2_000), requirements.task_type), "synthetic demo"
+        return build_synthetic_dataset(
+            requirements.goal, max(requirements.max_rows, 2_000), requirements.task_type
+        ), "synthetic demo"
 
     @staticmethod
     def _read_file(p: Path) -> pd.DataFrame:
@@ -199,7 +218,9 @@ class DataFetcherAgent:
         api.authenticate()
         base = Path("./automl_outputs/kaggle")
         api.dataset_download_files(parts[0], path=base, unzip=True)
-        return self._read_file(base / (parts[1] if len(parts) > 1 else f"{parts[0].split('/')[-1]}.csv"))
+        return self._read_file(
+            base / (parts[1] if len(parts) > 1 else f"{parts[0].split('/')[-1]}.csv")
+        )
 
     def _from_openml(self, query: str, goal: str) -> pd.DataFrame | None:
         try:

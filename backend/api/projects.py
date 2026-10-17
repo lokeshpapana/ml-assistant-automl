@@ -41,7 +41,9 @@ async def list_projects(
     count_query = select(func.count()).select_from(query.subquery())
     total = await session.scalar(count_query)
 
-    query = query.order_by(Project.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    query = (
+        query.order_by(Project.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    )
     result = await session.execute(query)
     projects = result.scalars().all()
 
@@ -124,15 +126,22 @@ async def project_context(
         "constraints": memory.get("constraints"),
         "decisions": (memory.get("decisions") or [])[-10:],
         "experiments": [
-            {"run_id": r["run_id"], "status": r["status"],
-             "best_model": (r.get("best") or {}).get("model")}
+            {
+                "run_id": r["run_id"],
+                "status": r["status"],
+                "best_model": (r.get("best") or {}).get("model"),
+            }
             for r in runlog.list_runs(project_id=str(project_id), limit=10)
         ],
         "best_model": memory.get("best"),
         "research": (memory.get("research") or [])[-10:],
         "warnings": memory.get("warnings") or [],
         "pending_config": memory.get("pending_config"),
-        "current_run": ({k: latest_run.get(k) for k in ("run_id", "status", "stage", "progress")} if latest_run else None),
+        "current_run": (
+            {k: latest_run.get(k) for k in ("run_id", "status", "stage", "progress")}
+            if latest_run
+            else None
+        ),
         "pending_features": memory.get("pending_features"),
         "excluded_features": memory.get("excluded_features"),
         "pending_model": memory.get("pending_model"),

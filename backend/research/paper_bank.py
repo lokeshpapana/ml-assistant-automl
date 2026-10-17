@@ -105,7 +105,17 @@ _KEYWORD_KINDS: dict[str, list[str]] = {
 
 
 def _pairs_from_columns(columns: list[str], dtypes: dict[str, str]) -> tuple[list[str], list[str]]:
-    numeric = [c for c in columns if c in dtypes and ("int" in dtypes[c].lower() or "dou" in dtypes[c].lower() or "floa" in dtypes[c].lower() or "dec" in dtypes[c].lower())]
+    numeric = [
+        c
+        for c in columns
+        if c in dtypes
+        and (
+            "int" in dtypes[c].lower()
+            or "dou" in dtypes[c].lower()
+            or "floa" in dtypes[c].lower()
+            or "dec" in dtypes[c].lower()
+        )
+    ]
     categorical = [c for c in columns if c not in numeric]
     return numeric, categorical
 
@@ -135,7 +145,9 @@ def select_offline_papers(
             score += 1.5
         if "categorical_pair" in requires and categorical and numeric:
             score += 1.0
-        if "datetime" in requires and any(d for d in dtypes.values() if "time" in d.lower() or "date" in d.lower()):
+        if "datetime" in requires and any(
+            d for d in dtypes.values() if "time" in d.lower() or "date" in d.lower()
+        ):
             score += 1.5
         for domain in card.get("domain", []):
             if domain in goal_lower:
@@ -145,7 +157,9 @@ def select_offline_papers(
         scored.append((score, card))
 
     scored.sort(key=lambda x: x[0], reverse=True)
-    return [card for score, card in scored if score > 0][:limit] or [card for _, card in scored][:limit]
+    return [card for score, card in scored if score > 0][:limit] or [card for _, card in scored][
+        :limit
+    ]
 
 
 def build_offline_features(
@@ -157,7 +171,11 @@ def build_offline_features(
     """Generate concrete (name, kind, operands) feature specs from the bank."""
     dtypes = dtypes or {}
     numeric, categorical = _pairs_from_columns(columns, dtypes)
-    datetime_cols = [c for c in columns if c in dtypes and ("time" in dtypes[c].lower() or "date" in dtypes[c].lower())]
+    datetime_cols = [
+        c
+        for c in columns
+        if c in dtypes and ("time" in dtypes[c].lower() or "date" in dtypes[c].lower())
+    ]
     features: list[dict[str, Any]] = []
     used_features: set[str] = set()
 
@@ -202,7 +220,13 @@ def build_offline_features(
 
     # Frequency encoding for high-cardinality categorical columns.
     if max_features > len(features) and categorical:
-        add("freq_encode", categorical[0], None, "1601.02307", "Frequency encoding for categorical features")
+        add(
+            "freq_encode",
+            categorical[0],
+            None,
+            "1601.02307",
+            "Frequency encoding for categorical features",
+        )
 
     # Calendar decomposition for datetime columns.
     if max_features > len(features) and datetime_cols:

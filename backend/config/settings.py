@@ -57,12 +57,16 @@ class Settings(BaseSettings):
     upload_dir: str = Field(default="./uploads", alias="UPLOAD_DIR")
 
     # Central Single-Source-Of-Truth dataset store (DuckDB preferred, SQLite fallback)
-    central_store_path: str = Field(default="./automl_outputs/central_store.duckdb", alias="CENTRAL_STORE_PATH")
+    central_store_path: str = Field(
+        default="./automl_outputs/central_store.duckdb", alias="CENTRAL_STORE_PATH"
+    )
     central_store_in_memory: bool = Field(default=False, alias="CENTRAL_STORE_IN_MEMORY")
 
     # MLflow (local file tracking by default -> no cloud)
     mlflow_tracking_uri: str = Field(default="./mlruns", alias="MLFLOW_TRACKING_URI")
-    mlflow_experiment_name: str = Field(default="interactive_automl", alias="MLFLOW_EXPERIMENT_NAME")
+    mlflow_experiment_name: str = Field(
+        default="interactive_automl", alias="MLFLOW_EXPERIMENT_NAME"
+    )
 
     # LLM provider: "local" (no keys needed), "openai", "anthropic", "gemini"
     llm_provider: str = Field(default="local", alias="LLM_PROVIDER")
@@ -75,7 +79,9 @@ class Settings(BaseSettings):
 
     # Paper research & knowledge retrieval (HTTP-based, no MCP daemon required)
     semantic_scholar_api_key: str = Field(default="", alias="SEMANTIC_SCHOLAR_API_KEY")
-    arxiv_mcp_server_url: str = Field(default="http://localhost:8000/mcp/arxiv", alias="ARXIV_MCP_SERVER_URL")
+    arxiv_mcp_server_url: str = Field(
+        default="http://localhost:8000/mcp/arxiv", alias="ARXIV_MCP_SERVER_URL"
+    )
     research_request_timeout: int = Field(default=12, alias="RESEARCH_REQUEST_TIMEOUT")
     enable_offline_paper_bank: bool = Field(default=True, alias="ENABLE_OFFLINE_PAPER_BANK")
 
@@ -85,7 +91,9 @@ class Settings(BaseSettings):
     automl_default_metric: str = Field(default="accuracy", alias="AUTOML_DEFAULT_METRIC")
     automl_default_target_value: float = Field(default=0.85, alias="AUTOML_DEFAULT_TARGET_VALUE")
     automl_metric_direction: str = Field(default="maximize", alias="AUTOML_METRIC_DIRECTION")
-    automl_feature_engineering_every_n: int = Field(default=2, alias="AUTOML_FEATURE_ENGINEERING_EVERY_N")
+    automl_feature_engineering_every_n: int = Field(
+        default=2, alias="AUTOML_FEATURE_ENGINEERING_EVERY_N"
+    )
     automl_test_size: float = Field(default=0.2, alias="AUTOML_TEST_SIZE")
     automl_model_time_budget: int = Field(default=45, alias="AUTOML_MODEL_TIME_BUDGET")
 

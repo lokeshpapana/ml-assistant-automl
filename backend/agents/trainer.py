@@ -45,9 +45,23 @@ def build_candidate_ladder(task_type: str) -> list[dict[str, Any]]:
         "neural_network",
     ]
     tuned: list[dict[str, Any]] = [
-        {"model": "random_forest", "params": {"n_estimators": 300, "max_depth": None, "min_samples_split": 2}},
-        {"model": "lightgbm", "params": {"n_estimators": 300, "learning_rate": 0.05, "num_leaves": 127}},
-        {"model": "xgboost", "params": {"n_estimators": 300, "learning_rate": 0.05, "max_depth": 5, "subsample": 0.8}},
+        {
+            "model": "random_forest",
+            "params": {"n_estimators": 300, "max_depth": None, "min_samples_split": 2},
+        },
+        {
+            "model": "lightgbm",
+            "params": {"n_estimators": 300, "learning_rate": 0.05, "num_leaves": 127},
+        },
+        {
+            "model": "xgboost",
+            "params": {
+                "n_estimators": 300,
+                "learning_rate": 0.05,
+                "max_depth": 5,
+                "subsample": 0.8,
+            },
+        },
     ]
     ladder: list[dict[str, Any]] = [{"model": m, "params": {}} for m in defaults]
     ladder.extend(tuned)
@@ -56,9 +70,23 @@ def build_candidate_ladder(task_type: str) -> list[dict[str, Any]]:
     # e.g. RandomForest has no `learning_rate`; mixing them raised TypeError and
     # killed any run that reached these rungs.
     hunt = [
-        {"model": "lightgbm", "params": {"n_estimators": 400, "learning_rate": 0.03, "num_leaves": 63}},
-        {"model": "xgboost", "params": {"n_estimators": 400, "learning_rate": 0.04, "max_depth": 6, "subsample": 0.8}},
-        {"model": "random_forest", "params": {"n_estimators": 400, "max_depth": None, "min_samples_split": 2}},
+        {
+            "model": "lightgbm",
+            "params": {"n_estimators": 400, "learning_rate": 0.03, "num_leaves": 63},
+        },
+        {
+            "model": "xgboost",
+            "params": {
+                "n_estimators": 400,
+                "learning_rate": 0.04,
+                "max_depth": 6,
+                "subsample": 0.8,
+            },
+        },
+        {
+            "model": "random_forest",
+            "params": {"n_estimators": 400, "max_depth": None, "min_samples_split": 2},
+        },
     ]
     for i in range(3):
         base = dict(hunt[i % 3])
@@ -71,7 +99,15 @@ def build_candidate_ladder(task_type: str) -> list[dict[str, Any]]:
 
 
 class TrainerAgent:
-    def __init__(self, task_type: str = "classification", test_size: float = 0.2, seed: int = 42, target_column: str | None = None, model_hint: str | None = None, start_index: int = 0):
+    def __init__(
+        self,
+        task_type: str = "classification",
+        test_size: float = 0.2,
+        seed: int = 42,
+        target_column: str | None = None,
+        model_hint: str | None = None,
+        start_index: int = 0,
+    ):
         self.task_type = task_type
         self.test_size = test_size
         self.seed = seed
@@ -121,7 +157,11 @@ class TrainerAgent:
         )
 
         df = store.to_dataframe()
-        target = self.target_column if self.target_column and self.target_column in df.columns else "target"
+        target = (
+            self.target_column
+            if self.target_column and self.target_column in df.columns
+            else "target"
+        )
         if target not in df.columns:
             target = store.columns()[-1]
         df = df.dropna(subset=[target]).copy()
@@ -141,7 +181,9 @@ class TrainerAgent:
                 for p in (feature_provenance or [])
                 if p.get("a") in excluded or p.get("b") in excluded
             }
-            drop_cols = [c for c in list(dict.fromkeys(excluded)) + sorted(derived) if c in X.columns]
+            drop_cols = [
+                c for c in list(dict.fromkeys(excluded)) + sorted(derived) if c in X.columns
+            ]
             if drop_cols:
                 X = X.drop(columns=drop_cols)
                 emit(
@@ -191,7 +233,12 @@ class TrainerAgent:
                 }
             )
             self.tracker.log_metrics(metrics)
-            self.tracker.log_metrics({"target_metric": metrics.get(target_spec.metric, 0.0), "training_time": training_time})
+            self.tracker.log_metrics(
+                {
+                    "target_metric": metrics.get(target_spec.metric, 0.0),
+                    "training_time": training_time,
+                }
+            )
             self.tracker.set_tags(
                 {
                     "model": model_name,
@@ -202,9 +249,19 @@ class TrainerAgent:
             )
             model_path = self.model_dir / f"iter_{iteration + 1}_{model_name}.pkl"
             with open(model_path, "wb") as fh:
-                pickle.dump({"model": model, "engineer": engineer, "feature_names": feature_names, "metrics": metrics}, fh)
+                pickle.dump(
+                    {
+                        "model": model,
+                        "engineer": engineer,
+                        "feature_names": feature_names,
+                        "metrics": metrics,
+                    },
+                    fh,
+                )
             self.tracker.log_artifact(model_path)
-            dataset_snapshot = store.export_csv(self.model_dir / f"iter_{iteration + 1}_dataset_snapshot.csv")
+            dataset_snapshot = store.export_csv(
+                self.model_dir / f"iter_{iteration + 1}_dataset_snapshot.csv"
+            )
             self.tracker.log_artifact(dataset_snapshot)
 
         record = {

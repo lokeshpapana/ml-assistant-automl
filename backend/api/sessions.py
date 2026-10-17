@@ -22,6 +22,7 @@ async def create_session(
     db: AsyncSession = Depends(get_async_session),
 ) -> SessionResponse:
     from backend.database.models import Project
+
     project = await db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -45,7 +46,9 @@ async def list_sessions(
     count_query = select(func.count()).select_from(query.subquery())
     total = await db.scalar(count_query)
 
-    query = query.order_by(Session.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    query = (
+        query.order_by(Session.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    )
     result = await db.execute(query)
     sessions = result.scalars().all()
 
@@ -111,7 +114,10 @@ async def session_messages(
         raise HTTPException(status_code=404, detail="Session not found")
     from backend import runlog
 
-    return {"session_id": str(session_id), "messages": runlog.list_chat(session_id=str(session_id), limit=limit)}
+    return {
+        "session_id": str(session_id),
+        "messages": runlog.list_chat(session_id=str(session_id), limit=limit),
+    }
 
 
 @router.delete("/{session_id}/messages", status_code=status.HTTP_204_NO_CONTENT)

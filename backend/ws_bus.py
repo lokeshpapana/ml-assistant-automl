@@ -63,7 +63,7 @@ class EventBus:
         with self._lock:
             self._history.append(event)
             if len(self._history) > self.max_history:
-                self._history = self._history[-self.max_history:]
+                self._history = self._history[-self.max_history :]
             subs = list(self._subscribers.items())
         for _, (loop, queue) in subs:
             try:
@@ -76,7 +76,7 @@ class EventBus:
         with self._lock:
             self._history.append(event)
             if len(self._history) > self.max_history:
-                self._history = self._history[-self.max_history:]
+                self._history = self._history[-self.max_history :]
             subs = list(self._subscribers.items())
         for _, (loop, queue) in subs:
             try:
@@ -89,7 +89,7 @@ class EventBus:
         with self._lock:
             self._history.append(event)
             if len(self._history) > self.max_history:
-                self._history = self._history[-self.max_history:]
+                self._history = self._history[-self.max_history :]
             subs = list(self._subscribers.items())
         for _, (loop, queue) in subs:
             try:

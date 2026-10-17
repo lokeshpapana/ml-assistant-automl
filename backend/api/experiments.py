@@ -61,7 +61,9 @@ async def list_experiments(
     count_query = select(func.count()).select_from(query.subquery())
     total = await db.scalar(count_query)
 
-    query = query.order_by(Experiment.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    query = (
+        query.order_by(Experiment.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    )
     result = await db.execute(query)
     experiments = result.scalars().all()
 

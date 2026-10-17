@@ -78,4 +78,6 @@ def _parse_uuid(value: str, field: str) -> uuid.UUID:
     try:
         return uuid.UUID(str(value))
     except (ValueError, AttributeError, TypeError):
-        raise HTTPException(status_code=400, detail=f"Invalid {field}: {value!r} (expected UUID)") from None
+        raise HTTPException(
+            status_code=400, detail=f"Invalid {field}: {value!r} (expected UUID)"
+        ) from None

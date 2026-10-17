@@ -116,14 +116,20 @@ class DatasetAcquisitionRequest(BaseModel):
     request: str | None = Field(None, description="Natural-language description of the ML task")
     target: str | None = Field(None, description="Explicit target column name if known")
     local_file_path: str | None = Field(None, description="Path to a user-provided dataset file")
-    source_dataset_id: UUID | None = Field(None, description="Use an already-uploaded dataset as the candidate")
+    source_dataset_id: UUID | None = Field(
+        None, description="Use an already-uploaded dataset as the candidate"
+    )
     query: str | None = Field(None, description="Search query when acquiring from external sources")
-    project_id: UUID | None = Field(None, description="Project to register the acquired dataset under")
+    project_id: UUID | None = Field(
+        None, description="Project to register the acquired dataset under"
+    )
     output_format: str = Field("csv", description="csv | xlsx | excel | parquet | json | sql")
     output_dir: str | None = Field(None, description="Directory to save the optimized dataset")
     save_csv: bool = True
     max_candidates: int = 5
-    requested_input_features: int | None = Field(None, description="Desired number of input features")
+    requested_input_features: int | None = Field(
+        None, description="Desired number of input features"
+    )
     register_as_dataset: bool = True
 
 

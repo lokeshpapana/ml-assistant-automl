@@ -115,6 +115,7 @@ def _with_retry(operation: str, fn):
 
 # ------------------------------------------------------------------ runs
 
+
 def save_run(run_id: str, project_id: Any, session_id: Any, config: dict) -> dict | None:
     """Insert the run record at campaign start. Best-effort: warns, never raises."""
     if not enabled():
@@ -143,8 +144,17 @@ def update_run(run_id: str, **fields: Any) -> dict | None:
     if not enabled() or not run_id:
         return None
     allowed = {
-        "status", "stage", "progress", "eta_seconds", "config", "dataset",
-        "best", "feature_history", "research", "error", "completed_at",
+        "status",
+        "stage",
+        "progress",
+        "eta_seconds",
+        "config",
+        "dataset",
+        "best",
+        "feature_history",
+        "research",
+        "error",
+        "completed_at",
     }
     try:
         with _Session() as db:
@@ -213,6 +223,7 @@ def _run_to_dict(row: Run) -> dict:
 
 # ------------------------------------------------------------------ events
 
+
 def log_event(
     run_id: str | None,
     event_type: str,
@@ -253,12 +264,7 @@ def list_events(run_id: str, limit: int = 1000) -> list[dict]:
         return []
     try:
         with _Session() as db:
-            q = (
-                select(RunEvent)
-                .where(RunEvent.run_id == run_id)
-                .order_by(RunEvent.ts)
-                .limit(limit)
-            )
+            q = select(RunEvent).where(RunEvent.run_id == run_id).order_by(RunEvent.ts).limit(limit)
             out = []
             for r in db.execute(q).scalars().all():
                 out.append(
@@ -280,6 +286,7 @@ def list_events(run_id: str, limit: int = 1000) -> list[dict]:
 
 
 # ------------------------------------------------------------------ chat
+
 
 def save_chat(
     project_id: Any, session_id: Any, role: str, text: str, agent: str | None = None
@@ -303,9 +310,7 @@ def save_chat(
     _with_retry("save_chat", _op)
 
 
-def list_chat(
-    project_id: Any = None, session_id: Any = None, limit: int = 200
-) -> list[dict]:
+def list_chat(project_id: Any = None, session_id: Any = None, limit: int = 200) -> list[dict]:
     if not enabled():
         return []
     try:
@@ -434,6 +439,7 @@ def remember(project_id: Any, section: str, payload: Any) -> dict:
 
 # ------------------------------------------------------------------ imports
 
+
 def record_import(
     target_project_id: Any,
     resource_type: str,
@@ -491,7 +497,9 @@ def list_imports(target_project_id: Any) -> list[dict]:
                 out.append(
                     {
                         "id": str(r.id),
-                        "source_project_id": str(r.source_project_id) if r.source_project_id else None,
+                        "source_project_id": str(r.source_project_id)
+                        if r.source_project_id
+                        else None,
                         "source_run_id": r.source_run_id,
                         "resource_type": r.resource_type,
                         "resource_ref": r.resource_ref or {},

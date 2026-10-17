@@ -50,8 +50,11 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # ------------------------------------------------------------------ REST
 
+
 @router.post("/automl/start")
-async def start_automl(body: dict | None = None, db: AsyncSession = Depends(get_async_session)) -> dict:
+async def start_automl(
+    body: dict | None = None, db: AsyncSession = Depends(get_async_session)
+) -> dict:
     """Start a campaign. ``body`` is the run config (unchanged shape); optional
     top-level (or config-nested) ``project_id`` / ``session_id`` are validated
     against Track 1 rows first — invalid ids return 404/400 and start nothing.
@@ -101,8 +104,17 @@ async def automl_dataset_details(project_id: str | None = None):
         preview = orch._safe_preview(limit=50)
         stats = orch.store.column_stats()
     except Exception as exc:  # noqa: BLE001
-        return {"preview": {"rows": 0, "columns": [], "dtypes": {}, "preview": [], "unavailable": str(exc)},
-                "stats": {}, "provenance": None}
+        return {
+            "preview": {
+                "rows": 0,
+                "columns": [],
+                "dtypes": {},
+                "preview": [],
+                "unavailable": str(exc),
+            },
+            "stats": {},
+            "provenance": None,
+        }
     provenance = None
     if project_id:
         try:
@@ -220,8 +232,9 @@ async def resume_automl(
         session_id=payload.get("session_id"),
     )
     if result.get("status") in ("not_found", "wrong_project"):
-        raise HTTPException(status_code=404 if result["status"] == "not_found" else 400,
-                            detail=result.get("detail"))
+        raise HTTPException(
+            status_code=404 if result["status"] == "not_found" else 400, detail=result.get("detail")
+        )
     return result
 
 
@@ -253,8 +266,15 @@ async def feature_state(run_id: str | None = None) -> dict:
             "target": orch.requirements.target_column,
         }
     except Exception as exc:
-        live = {"columns": [], "dtypes": {}, "excluded": [], "added": [], "ops": [],
-                "target": orch.requirements.target_column, "unavailable": str(exc)}
+        live = {
+            "columns": [],
+            "dtypes": {},
+            "excluded": [],
+            "added": [],
+            "ops": [],
+            "target": orch.requirements.target_column,
+            "unavailable": str(exc),
+        }
 
     history: list[dict] = []
     try:
@@ -262,7 +282,11 @@ async def feature_state(run_id: str | None = None) -> dict:
 
         rows = _runlog.list_runs(project_id=orch.project_id, limit=10) if orch.project_id else []
         if run_id:
-            rows = [r for r in _runlog.list_runs(project_id=orch.project_id, limit=50) if r["run_id"] == run_id] or rows
+            rows = [
+                r
+                for r in _runlog.list_runs(project_id=orch.project_id, limit=50)
+                if r["run_id"] == run_id
+            ] or rows
         history = [
             {
                 "run_id": r["run_id"],
@@ -281,15 +305,19 @@ async def feature_state(run_id: str | None = None) -> dict:
 @router.post("/automl/features/disable")
 async def feature_disable(body: dict) -> dict:
     orch = get_orchestrator()
-    return {"note": orch.disable_feature(body.get("column", ""), body.get("project_id")),
-            "excluded": orch.excluded_features()}
+    return {
+        "note": orch.disable_feature(body.get("column", ""), body.get("project_id")),
+        "excluded": orch.excluded_features(),
+    }
 
 
 @router.post("/automl/features/enable")
 async def feature_enable(body: dict) -> dict:
     orch = get_orchestrator()
-    return {"note": orch.enable_feature(body.get("column", ""), body.get("project_id")),
-            "excluded": orch.excluded_features()}
+    return {
+        "note": orch.enable_feature(body.get("column", ""), body.get("project_id")),
+        "excluded": orch.excluded_features(),
+    }
 
 
 @router.post("/automl/features/remove")
@@ -326,6 +354,7 @@ async def set_target(body: dict) -> dict:
 
 
 # ------------------------------------------------------------------ WebSocket
+
 
 @router.websocket("/ws/automl")
 async def automl_websocket(ws: WebSocket) -> None:
@@ -400,7 +429,9 @@ async def _validate_ws_start(message: dict, ws: WebSocket) -> dict | None:
         async with async_session_maker() as db:
             validated = await validate_run_context(ctx["project_id"], ctx["session_id"], db)
     except HTTPException as exc:
-        await ws.send_json({"type": "ack", "status": "error", "detail": exc.detail, "code": exc.status_code})
+        await ws.send_json(
+            {"type": "ack", "status": "error", "detail": exc.detail, "code": exc.status_code}
+        )
         return None
     message = dict(message)
     if validated["project_id"]:

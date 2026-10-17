@@ -62,7 +62,9 @@ def search_papers(query: str, domain: str = "", max_results: int = 5) -> list[di
     except Exception:
         pass
     try:
-        s2 = search_semantic_scholar(query, api_key=settings.semantic_scholar_api_key, limit=max_results)
+        s2 = search_semantic_scholar(
+            query, api_key=settings.semantic_scholar_api_key, limit=max_results
+        )
         if s2:
             papers.extend(s2)
     except Exception:
@@ -83,7 +85,11 @@ def search_semantic_scholar(query: str, api_key: str = "", limit: int = 5) -> li
     try:
         resp = httpx.get(
             SEMANTIC_SCHOLAR_API,
-            params={"query": query, "limit": limit, "fields": "title,abstract,authors,url,externalIds,corpusId"},
+            params={
+                "query": query,
+                "limit": limit,
+                "fields": "title,abstract,authors,url,externalIds,corpusId",
+            },
             headers=headers,
             timeout=settings.research_request_timeout,
         )
@@ -94,8 +100,10 @@ def search_semantic_scholar(query: str, api_key: str = "", limit: int = 5) -> li
         for item in data.get("data", []):
             out.append(
                 {
-                    "paper_id": item.get("corpusId") or item.get("externalIds", {}).get("ArXiv")
-                    or item.get("paperId") or item.get("title", "")[:32],
+                    "paper_id": item.get("corpusId")
+                    or item.get("externalIds", {}).get("ArXiv")
+                    or item.get("paperId")
+                    or item.get("title", "")[:32],
                     "title": item.get("title", ""),
                     "abstract": item.get("abstract") or "",
                     "authors": [a.get("name", "") for a in item.get("authors", [])],

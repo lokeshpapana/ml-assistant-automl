@@ -26,7 +26,13 @@ class ResearchAgent:
         emit: Callable[[dict[str, Any]], None],
         max_features: int = 6,
     ) -> list[dict[str, Any]]:
-        emit({"type": "agent_message", "agent": "research", "text": "Searching papers for feature-engineering techniques…"})
+        emit(
+            {
+                "type": "agent_message",
+                "agent": "research",
+                "text": "Searching papers for feature-engineering techniques…",
+            }
+        )
 
         columns = store.columns()
         dtypes = store.dtypes()
@@ -95,7 +101,13 @@ class ResearchAgent:
                     }
                 )
             except Exception as exc:  # keep the loop alive for any single bad spec
-                emit({"type": "agent_message", "agent": "research", "text": f"Skipped feature '{feat.get('name')}': {exc}"})
+                emit(
+                    {
+                        "type": "agent_message",
+                        "agent": "research",
+                        "text": f"Skipped feature '{feat.get('name')}': {exc}",
+                    }
+                )
 
         if not applied:
             emit(
@@ -105,7 +117,9 @@ class ResearchAgent:
                     "text": "No new numeric features could be engineered from the current columns.",
                 }
             )
-        emit({"type": "dataset_preview", "event": "dataset_preview", "data": store.preview(limit=25)})
+        emit(
+            {"type": "dataset_preview", "event": "dataset_preview", "data": store.preview(limit=25)}
+        )
         return applied
 
 

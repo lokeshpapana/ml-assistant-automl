@@ -99,7 +99,9 @@ async def list_datasets(
     count_query = select(func.count()).select_from(query.subquery())
     total = await db.scalar(count_query)
 
-    query = query.order_by(Dataset.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    query = (
+        query.order_by(Dataset.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    )
     result = await db.execute(query)
     datasets = result.scalars().all()
 
@@ -124,7 +126,8 @@ async def get_dataset(
 
 
 @router.delete("/{dataset_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_dataset(    dataset_id: UUID,
+async def delete_dataset(
+    dataset_id: UUID,
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     dataset = await db.get(Dataset, dataset_id)
@@ -162,7 +165,12 @@ async def stage_dataset(
     runlog.remember(
         str(project_id),
         "dataset",
-        {"source": "upload", "path": dataset.file_path, "rows": dataset.rows,
-         "columns": dataset.columns, "name": dataset.name},
+        {
+            "source": "upload",
+            "path": dataset.file_path,
+            "rows": dataset.rows,
+            "columns": dataset.columns,
+            "name": dataset.name,
+        },
     )
     return {"staged": dataset.file_path, "rows": dataset.rows, "columns": dataset.columns}

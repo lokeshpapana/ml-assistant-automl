@@ -18,6 +18,7 @@ from backend.config import settings
 
 try:  # pragma: no cover - import guard
     import mlflow
+
     _MLFLOW_AVAILABLE = True
 except Exception:  # pragma: no cover
     mlflow = None

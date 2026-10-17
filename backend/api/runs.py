@@ -62,7 +62,12 @@ async def list_runs(
 ) -> dict:
     """List persisted runs, optionally filtered. Newest first."""
     return {
-        "runs": runlog.list_runs(project_id=str(project_id) if project_id else None, status=status, limit=limit, offset=offset),
+        "runs": runlog.list_runs(
+            project_id=str(project_id) if project_id else None,
+            status=status,
+            limit=limit,
+            offset=offset,
+        ),
         "limit": limit,
         "offset": offset,
     }
@@ -93,7 +98,11 @@ async def get_run(run_id: str, events_limit: int = Query(1000, ge=0, le=5000)) -
         "stages_seen": stages,
         "artifacts": artifacts,
         "mlflow_run_ids": sorted(
-            {e.get("metadata", {}).get("mlflow_run_id") for e in events if e.get("metadata", {}).get("mlflow_run_id")}
+            {
+                e.get("metadata", {}).get("mlflow_run_id")
+                for e in events
+                if e.get("metadata", {}).get("mlflow_run_id")
+            }
         ),
     }
 
@@ -143,6 +152,7 @@ async def run_diagnostics(run_id: str) -> dict:
 
 # ------------------------------------------------------------------ internals
 
+
 def _infer_task(series: pd.Series) -> str:
     if pd.api.types.is_numeric_dtype(series) and series.nunique() > 20:
         return "regression"
@@ -156,17 +166,25 @@ def _load_best_bundle(run: dict, best: dict) -> tuple[dict, pd.DataFrame, str]:
     if not pkl.exists():
         raise HTTPException(status_code=404, detail=f"Best-model artifact missing: {pkl}")
     if not snap.exists():
-        raise HTTPException(status_code=404, detail="Dataset snapshot for this run is missing; diagnostics need it.")
+        raise HTTPException(
+            status_code=404, detail="Dataset snapshot for this run is missing; diagnostics need it."
+        )
     try:
         with open(pkl, "rb") as fh:
             bundle = pickle.load(fh)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Could not load model artifact: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Could not load model artifact: {exc}"
+        ) from exc
     try:
         df = pd.read_csv(snap)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Could not read dataset snapshot: {exc}") from exc
-    target = (run.get("dataset") or {}).get("target_column") or (run.get("config") or {}).get("target_column")
+        raise HTTPException(
+            status_code=500, detail=f"Could not read dataset snapshot: {exc}"
+        ) from exc
+    target = (run.get("dataset") or {}).get("target_column") or (run.get("config") or {}).get(
+        "target_column"
+    )
     engineer = bundle.get("engineer")
     if not target or target not in df.columns:
         eng_target = getattr(engineer, "target_column", None)
@@ -183,7 +201,9 @@ def _transformed(engineer: Any, df: pd.DataFrame, target: str) -> tuple[Any, Any
     try:
         X, y = engineer.transform(df)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Feature pipeline failed on the snapshot: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Feature pipeline failed on the snapshot: {exc}"
+        ) from exc
     if y is None:
         y = df[target].to_numpy()
     return X, y
@@ -217,8 +237,13 @@ def _classification_diagnostics(y: Any, y_pred: Any, y_proba: Any) -> dict:
             "recall": float(recall_score(y, y_pred, average="weighted", zero_division=0)),
             "f1": float(f1_score(y, y_pred, average="weighted", zero_division=0)),
         },
-        "confusion_matrix": {"labels": labels, "matrix": confusion_matrix(y, y_pred, labels=labels).tolist()},
-        "classification_report": classification_report(y, y_pred, zero_division=0, output_dict=True),
+        "confusion_matrix": {
+            "labels": labels,
+            "matrix": confusion_matrix(y, y_pred, labels=labels).tolist(),
+        },
+        "classification_report": classification_report(
+            y, y_pred, zero_division=0, output_dict=True
+        ),
         "roc": None,
         "pr": None,
     }
@@ -280,14 +305,21 @@ def _regression_diagnostics(y: Any, y_pred: Any) -> dict:
             "actual": y[order][idx].tolist(),
         },
         "decile_means": [
-            {"predicted_mean": float(np.mean(d)), "actual_mean": float(np.mean(y[np.argsort(yp)][i * len(y) // 10:(i + 1) * len(y) // 10 or None]))}
+            {
+                "predicted_mean": float(np.mean(d)),
+                "actual_mean": float(
+                    np.mean(y[np.argsort(yp)][i * len(y) // 10 : (i + 1) * len(y) // 10 or None])
+                ),
+            }
             for i, d in enumerate(deciles)
         ],
         "roc": None,
         "pr": None,
         "confusion_matrix": None,
     }
-    out["omitted"].append("ROC/PR/confusion matrix are classification-only and correctly omitted for regression.")
+    out["omitted"].append(
+        "ROC/PR/confusion matrix are classification-only and correctly omitted for regression."
+    )
     return out
 
 
@@ -310,16 +342,24 @@ def _error_examples(df: pd.DataFrame, y: Any, y_pred: Any, task: str) -> list[di
     if task == "classification":
         bad = np.where(y != yp)[0][:5]
         return [
-            {"row": int(i), "actual": str(y[i]), "predicted": str(yp[i]),
-             "features": {c: str(df.iloc[int(i)][c]) for c in list(df.columns)[:8]}}
+            {
+                "row": int(i),
+                "actual": str(y[i]),
+                "predicted": str(yp[i]),
+                "features": {c: str(df.iloc[int(i)][c]) for c in list(df.columns)[:8]},
+            }
             for i in bad
         ]
     resid = np.abs(np.asarray(y, dtype=float) - np.asarray(yp, dtype=float))
     bad = np.argsort(resid)[-5:][::-1]
     return [
-        {"row": int(i), "actual": float(y[i]), "predicted": float(yp[i]),
-         "abs_residual": float(resid[i]),
-         "features": {c: str(df.iloc[int(i)][c]) for c in list(df.columns)[:8]}}
+        {
+            "row": int(i),
+            "actual": float(y[i]),
+            "predicted": float(yp[i]),
+            "abs_residual": float(resid[i]),
+            "features": {c: str(df.iloc[int(i)][c]) for c in list(df.columns)[:8]},
+        }
         for i in bad
     ]
 
@@ -350,6 +390,7 @@ def _permutation_importance(model: Any, X: Any, y: Any, task: str, omitted: list
 
 # ------------------------------------------------------------------ reports
 
+
 @router.get("/projects/{project_id}/report")
 async def project_report(
     project_id: UUID,
@@ -373,7 +414,12 @@ async def project_report(
     events = runlog.list_events(run["run_id"]) if run else []
     report = _build_report(project, memory, run, events)
     if run:
-        runlog.log_event(run["run_id"], "report_generated", message="Project report generated.", stage=run.get("stage"))
+        runlog.log_event(
+            run["run_id"],
+            "report_generated",
+            message="Project report generated.",
+            stage=run.get("stage"),
+        )
     if format == "json":
         from fastapi.responses import JSONResponse
 
@@ -415,18 +461,30 @@ def _build_report(project: Any, memory: dict, run: dict | None, events: list) ->
         if e.get("event_type") == "model_training"
     ]
     target_metric = ((run or {}).get("config") or {}).get("metric", "target_metric")
-    ranked = sorted(iters, key=lambda r: (r.get("metrics") or {}).get(target_metric, float("-inf")), reverse=True)
+    ranked = sorted(
+        iters,
+        key=lambda r: (r.get("metrics") or {}).get(target_metric, float("-inf")),
+        reverse=True,
+    )
     limitations = list((memory.get("warnings") or []))
-    limitations.append("Evaluation uses a single holdout split (no cross-validation in AutoML track).")
+    limitations.append(
+        "Evaluation uses a single holdout split (no cross-validation in AutoML track)."
+    )
     if not run:
         limitations.append("No completed run is stored for this project yet — run AutoML first.")
     recommendations = []
     if best and best.get("target_met"):
-        recommendations.append(f"Target met by {best.get('model')} — export the artifact for deployment.")
+        recommendations.append(
+            f"Target met by {best.get('model')} — export the artifact for deployment."
+        )
     elif run:
-        recommendations.append("Target not met — try more iterations, additional features, or a looser target.")
+        recommendations.append(
+            "Target not met — try more iterations, additional features, or a looser target."
+        )
     if memory.get("warnings"):
-        recommendations.append("Address the warnings listed in Limitations before trusting the model.")
+        recommendations.append(
+            "Address the warnings listed in Limitations before trusting the model."
+        )
     return {
         "project": {
             "id": str(project.id),
@@ -448,7 +506,9 @@ def _build_report(project: Any, memory: dict, run: dict | None, events: list) ->
         "features": (run or {}).get("feature_history") or [],
         "experiments": ranked,
         "best_model": best,
-        "evaluation": {"note": "Open the Evaluation page for recomputed diagnostics of the best model."},
+        "evaluation": {
+            "note": "Open the Evaluation page for recomputed diagnostics of the best model."
+        },
         "limitations": limitations,
         "reproducibility": {
             "trainer_seed": 42,
@@ -459,7 +519,14 @@ def _build_report(project: Any, memory: dict, run: dict | None, events: list) ->
                 "pandas": getattr(pdmod, "__version__", "?"),
             },
         },
-        "run": ({k: run.get(k) for k in ("run_id", "status", "stage", "started_at", "completed_at", "error")} if run else None),
+        "run": (
+            {
+                k: run.get(k)
+                for k in ("run_id", "status", "stage", "started_at", "completed_at", "error")
+            }
+            if run
+            else None
+        ),
         "recommendations": recommendations,
         "memory_decisions": (memory.get("decisions") or [])[-20:],
     }
@@ -503,10 +570,26 @@ def _report_html(r: dict) -> str:
     import json as _json
 
     body = f"<h1>AutoML Report — {_html.escape(str(r['project']['name']))}</h1>"
-    body += "<h2>Dataset</h2><pre>" + _html.escape(_json.dumps(r["dataset"], indent=2, default=str)) + "</pre>"
-    body += "<h2>Best model</h2><pre>" + _html.escape(_json.dumps(r["best_model"], indent=2, default=str)) + "</pre>"
-    body += "<h2>Limitations</h2><ul>" + "".join(f"<li>{_html.escape(str(x))}</li>" for x in r["limitations"]) + "</ul>"
-    body += "<h2>Recommendations</h2><ul>" + "".join(f"<li>{_html.escape(str(x))}</li>" for x in r["recommendations"]) + "</ul>"
+    body += (
+        "<h2>Dataset</h2><pre>"
+        + _html.escape(_json.dumps(r["dataset"], indent=2, default=str))
+        + "</pre>"
+    )
+    body += (
+        "<h2>Best model</h2><pre>"
+        + _html.escape(_json.dumps(r["best_model"], indent=2, default=str))
+        + "</pre>"
+    )
+    body += (
+        "<h2>Limitations</h2><ul>"
+        + "".join(f"<li>{_html.escape(str(x))}</li>" for x in r["limitations"])
+        + "</ul>"
+    )
+    body += (
+        "<h2>Recommendations</h2><ul>"
+        + "".join(f"<li>{_html.escape(str(x))}</li>" for x in r["recommendations"])
+        + "</ul>"
+    )
     return f"<!DOCTYPE html><html><head><meta charset='utf-8'><title>Report</title></head><body>{body}</body></html>"
 
 
@@ -531,7 +614,9 @@ async def run_research(run_id: str) -> dict:
                 "title": f.get("title"),
                 "technique": f.get("technique"),
                 "feature": f.get("feature"),
-                "origin": "OFFLINE KNOWLEDGE" if pid in offline_ids else ("LIVE RESEARCH" if pid else "HEURISTIC"),
+                "origin": "OFFLINE KNOWLEDGE"
+                if pid in offline_ids
+                else ("LIVE RESEARCH" if pid else "HEURISTIC"),
                 "url": f"https://arxiv.org/abs/{pid}" if pid else None,
             }
         )

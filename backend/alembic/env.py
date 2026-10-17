@@ -20,6 +20,7 @@ config = context.config
 
 if config.config_file_name is not None:
     import logging.config
+
     logging.config.fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
@@ -62,6 +63,7 @@ async def run_async_migrations() -> None:
 
 def run_migrations_online() -> None:
     import asyncio
+
     asyncio.run(run_async_migrations())
 
 

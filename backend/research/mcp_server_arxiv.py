@@ -64,7 +64,9 @@ def _tool_call(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             "content": [
                 {
                     "type": "text",
-                    "text": json.dumps(fetch_paper_content(arguments.get("paper_id", "")), default=str),
+                    "text": json.dumps(
+                        fetch_paper_content(arguments.get("paper_id", "")), default=str
+                    ),
                 }
             ]
         }
@@ -105,7 +107,11 @@ def main() -> None:
         elif method in ("notifications/initialized", "shutdown"):
             response = {"jsonrpc": "2.0", "id": req_id, "result": {}}
         else:
-            response = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": f"Unsupported method: {method}"}}
+            response = {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "error": {"code": -32601, "message": f"Unsupported method: {method}"},
+            }
 
         sys.stdout.write(json.dumps(response) + "\n")
         sys.stdout.flush()

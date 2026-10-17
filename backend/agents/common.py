@@ -41,18 +41,30 @@ class TargetSpec:
     direction: str = "maximize"
 
     def to_dict(self) -> dict[str, Any]:
-        return {"metric": self.metric, "op": self.op, "value": self.value, "direction": self.direction}
+        return {
+            "metric": self.metric,
+            "op": self.op,
+            "value": self.value,
+            "direction": self.direction,
+        }
 
 
-def parse_target_spec(raw: str | TargetSpec | dict[str, Any] | None, default_metric: str = "accuracy") -> TargetSpec:
+def parse_target_spec(
+    raw: str | TargetSpec | dict[str, Any] | None, default_metric: str = "accuracy"
+) -> TargetSpec:
     """Parse a user target like ``accuracy >= 0.90`` / ``RMSE <= 1.2`` into a spec."""
     if isinstance(raw, TargetSpec):
         raw = raw.to_dict()
     if isinstance(raw, dict):
-        metric = METRIC_SYNONYMS.get(str(raw.get("metric", default_metric)).lower(), str(raw.get("metric", default_metric)).lower())
+        metric = METRIC_SYNONYMS.get(
+            str(raw.get("metric", default_metric)).lower(),
+            str(raw.get("metric", default_metric)).lower(),
+        )
         value = float(raw.get("value", 0.0))
         op = str(raw.get("op", ">=" if metric not in MINIMIZE_METRICS else "<="))
-        direction = str(raw.get("direction", "minimize" if metric in MINIMIZE_METRICS else "maximize"))
+        direction = str(
+            raw.get("direction", "minimize" if metric in MINIMIZE_METRICS else "maximize")
+        )
         return TargetSpec(metric=metric, op=op, value=value, direction=direction)
 
     text = (raw or "").strip()
@@ -61,7 +73,12 @@ def parse_target_spec(raw: str | TargetSpec | dict[str, Any] | None, default_met
         metric = METRIC_SYNONYMS.get(m.group("metric").lower(), m.group("metric").lower())
         op = m.group("op") or (">=" if metric not in MINIMIZE_METRICS else "<=")
         value = float(m.group("value"))
-        return TargetSpec(metric=metric, op=op, value=value, direction="minimize" if metric in MINIMIZE_METRICS else "maximize")
+        return TargetSpec(
+            metric=metric,
+            op=op,
+            value=value,
+            direction="minimize" if metric in MINIMIZE_METRICS else "maximize",
+        )
 
     metric = METRIC_SYNONYMS.get(text.lower(), text.lower() or default_metric)
     return TargetSpec(metric=metric)
@@ -124,10 +141,23 @@ class Requirements:
         }
 
 
-_TARGET_COLUMN_CANDIDATES = ("target", "label", "class", "y", "outcome", "result", "fraud", "price", "churn", "score")
+_TARGET_COLUMN_CANDIDATES = (
+    "target",
+    "label",
+    "class",
+    "y",
+    "outcome",
+    "result",
+    "fraud",
+    "price",
+    "churn",
+    "score",
+)
 
 
-def detect_task(df: pd.DataFrame, explicit_target: str | None = None) -> tuple[str | None, str, dict[str, Any]]:
+def detect_task(
+    df: pd.DataFrame, explicit_target: str | None = None
+) -> tuple[str | None, str, dict[str, Any]]:
     """Detect the target column and task type from the single central dataset."""
     from ml.preprocessing.profiler import profile_dataset
 

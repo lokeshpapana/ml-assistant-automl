@@ -43,7 +43,9 @@ async def profile_dataset(
     try:
         from ml.preprocessing.profiler import profile_dataset as ml_profile
 
-        profile = ml_profile(dataset.file_path, target_column=request.target_column, sample_size=request.sample_size)
+        profile = ml_profile(
+            dataset.file_path, target_column=request.target_column, sample_size=request.sample_size
+        )
 
         dataset.status = DatasetStatus.READY
         dataset.rows = profile["overview"]["n_rows"]
@@ -78,7 +80,9 @@ async def create_experiment(
         raise HTTPException(status_code=404, detail="Dataset not found in this project")
 
     if dataset.status != DatasetStatus.READY:
-        raise HTTPException(status_code=400, detail="Dataset must be profiled before running experiments")
+        raise HTTPException(
+            status_code=400, detail="Dataset must be profiled before running experiments"
+        )
 
     experiment = Experiment(
         project_id=project_id,
@@ -142,7 +146,9 @@ async def run_experiment(
             raise HTTPException(status_code=400, detail="Unsupported file format")
 
         if run_request.target_column not in df.columns:
-            raise HTTPException(status_code=400, detail=f"Target column '{run_request.target_column}' not found")
+            raise HTTPException(
+                status_code=400, detail=f"Target column '{run_request.target_column}' not found"
+            )
 
         from ml.experiments.runner import ExperimentRunner
 

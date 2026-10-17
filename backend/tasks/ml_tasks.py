@@ -111,13 +111,17 @@ async def _run_experiment_async(
 
 
 @celery_app.task(bind=True)
-def profile_dataset_task(self, dataset_id: str, target_column: str | None = None, sample_size: int | None = None) -> dict:
+def profile_dataset_task(
+    self, dataset_id: str, target_column: str | None = None, sample_size: int | None = None
+) -> dict:
     import asyncio
 
     return asyncio.run(_profile_dataset_async(dataset_id, target_column, sample_size))
 
 
-async def _profile_dataset_async(dataset_id: str, target_column: str | None, sample_size: int | None) -> dict:
+async def _profile_dataset_async(
+    dataset_id: str, target_column: str | None, sample_size: int | None
+) -> dict:
     async with async_session_maker() as db:
         from backend.database.models import Dataset, DatasetStatus
 
@@ -128,7 +132,9 @@ async def _profile_dataset_async(dataset_id: str, target_column: str | None, sam
         try:
             from ml.preprocessing.profiler import profile_dataset as ml_profile
 
-            profile = ml_profile(dataset.file_path, target_column=target_column, sample_size=sample_size)
+            profile = ml_profile(
+                dataset.file_path, target_column=target_column, sample_size=sample_size
+            )
 
             dataset.status = DatasetStatus.READY
             dataset.rows = profile["overview"]["n_rows"]
