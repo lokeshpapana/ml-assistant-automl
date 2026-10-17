@@ -10,9 +10,13 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
-from backend.agents.common import Requirements, parse_target_spec
+from backend.agents.common import (
+    _TARGET_COLUMN_CANDIDATES,
+    Requirements,
+    parse_target_spec,
+)
 from backend.agents.llm import BaseLLM, get_llm
 from backend.config import settings
 
@@ -20,9 +24,13 @@ _QUESTION_ORDER = ["goal", "metric", "source", "rows", "target_column", "confirm
 
 _INT_MATCH = re.compile(r"(\d[\d,]*)")
 
-_METRIC_NAME_RE = r"accuracy|acc|f1|precision|recall|auc|roc(?:_auc)?|logloss|rmse|mae|mse|r2(?:_score)?"
+_METRIC_NAME_RE = (
+    r"accuracy|acc|f1|precision|recall|auc|roc(?:_auc)?|logloss|rmse|mae|mse|r2(?:_score)?"
+)
 # "90% accuracy" / "90 percent accuracy" / "85 pct f1"
-_PCT_FIRST_RE = re.compile(rf"(?P<num>\d+(?:\.\d+)?)\s*(?:%|percent|pct)\s*(?P<met>{_METRIC_NAME_RE})", re.IGNORECASE)
+_PCT_FIRST_RE = re.compile(
+    rf"(?P<num>\d+(?:\.\d+)?)\s*(?:%|percent|pct)\s*(?P<met>{_METRIC_NAME_RE})", re.IGNORECASE
+)
 # "rmse under 1.2" / "accuracy of 0.9" / "f1 at least 0.85"
 _WORDY_METRIC_RE = re.compile(
     rf"(?P<met>{_METRIC_NAME_RE})\s+(?P<word>under|below|at most|over|above|at least|of|is|around|about)\s+(?P<num>\d+(?:\.\d+)?)",
@@ -48,14 +56,34 @@ _TARGET_IS_RE = re.compile(
 )
 
 _WORDY_OPS = {
-    "under": "<=", "below": "<=", "at most": "<=",
-    "over": ">=", "above": ">=", "at least": ">=",
+    "under": "<=",
+    "below": "<=",
+    "at most": "<=",
+    "over": ">=",
+    "above": ">=",
+    "at least": ">=",
 }
 
 _AFFIRMATIVES = {
-    "start", "go", "begin", "yes", "ok", "confirm", "yes start",
-    "let's go", "lets go", "do it", "proceed", "start automl", "run it",
-    "start training", "start the run", "start the training", "y", "yeah", "sure",
+    "start",
+    "go",
+    "begin",
+    "yes",
+    "ok",
+    "confirm",
+    "yes start",
+    "let's go",
+    "lets go",
+    "do it",
+    "proceed",
+    "start automl",
+    "run it",
+    "start training",
+    "start the run",
+    "start the training",
+    "y",
+    "yeah",
+    "sure",
 }
 
 _SOURCE_KEYWORDS = {
@@ -80,6 +108,7 @@ class InterviewerAgent:
         self.session = InterviewerSession()
         self.pending_action: dict[str, Any] | None = None
         self.memory: dict[str, Any] = {}
+        self.dataset_context: dict[str, Any] = {}
 
     def reset(self, defaults: Requirements | None = None) -> None:
         self.session = InterviewerSession(requirements=defaults or Requirements())
@@ -104,7 +133,9 @@ class InterviewerAgent:
         if req.target_value <= 0 and req.metric not in ("rmse", "mae", "mse"):
             req.target_value = settings.automl_default_target_value
         req.max_iterations = req.max_iterations or settings.automl_max_iterations
-        req.feature_engineering_every_n = req.feature_engineering_every_n or settings.automl_feature_engineering_every_n
+        req.feature_engineering_every_n = (
+            req.feature_engineering_every_n or settings.automl_feature_engineering_every_n
+        )
         return req
 
     def next_question(self) -> str:
@@ -122,6 +153,13 @@ class InterviewerAgent:
                 "'openml' (search a dataset), 'kaggle' (needs credentials), or 'synthetic' (generate a demo dataset)."
             )
         if self.awaiting == "rows" and not req.meta.get("rows_explicit"):
+            total = (self.dataset_context or {}).get("rows")
+            if total:
+                return (
+                    f"Your working table holds {int(total):,} rows. How many should I cap "
+                    "training at? Examples: '10k rows', '50000 rows', or 'auto' for the "
+                    "50,000 default."
+                )
             return (
                 "How many rows should I cap the dataset at? "
                 "Examples: '10k rows', '50000 rows', or 'auto' for the 50,000 default."
@@ -168,15 +206,23 @@ class InterviewerAgent:
         return self.confirm_summary()
 
     def ingest_chat(self, text: str) -> tuple[str, bool]:
-        """Handle a chat line during the interview. Returns (reply, stage_advanced).
+        """Handle a chat line, grounded in the live dataset and project memory.
 
-        Medium-autonomy behaviour: every message is first scanned for indirect
-        signals (metric expressions, data-source hints, row caps, target-column
-        markers) no matter which question is currently pending. Anything found is
-        applied immediately, announced in the reply, and its question is skipped.
-        Routine choices fall back to safe defaults; training only starts on an
-        explicit confirmation.
+        Before the interview state machine runs we read whatever the loaded
+        dataset and the project's stored memory already tell us (data source,
+        target column, task type, prior goal). That context is announced once and
+        the matching questions are skipped, so the agent reasons about *this* data
+        and *this* project instead of asking blind for a row cap and a target.
         """
+        self._infer_from_dataset()
+        briefing = self._dataset_briefing()
+        reply, advanced = self._ingest_chat_inner(text)
+        if briefing:
+            reply = f"{briefing}\n\n{reply}"
+        return reply, advanced
+
+    def _ingest_chat_inner(self, text: str) -> tuple[str, bool]:
+        """The deterministic interview state machine (see ``ingest_chat``)."""
         req = self.requirements
         text = text.strip()
         lower = text.lower()
@@ -295,7 +341,11 @@ class InterviewerAgent:
                     rows *= 1_000_000
                 rows = min(max(rows, 100), 5_000_000)
                 if rows != req.max_rows or not req.meta.get("rows_explicit"):
-                    verb = "capping data at" if not req.meta.get("rows_explicit") else "updated row cap to"
+                    verb = (
+                        "capping data at"
+                        if not req.meta.get("rows_explicit")
+                        else "updated row cap to"
+                    )
                     notes.append(f"{verb} {rows:,} rows")
                 req.max_rows = rows
                 req.meta["rows_explicit"] = True
@@ -343,7 +393,7 @@ class InterviewerAgent:
             # Avoid matching a bare number glued to an unrelated word salad:
             # require an explicit operator, a % sign, or "of/is/:/=" nearby.
             op, pct = m.group("op"), m.group("pct")
-            context = text[max(0, m.start() - 6):m.end() + 2].lower()
+            context = text[max(0, m.start() - 6) : m.end() + 2].lower()
             glued = bool(op or pct or any(w in context for w in ("of", "is", "=", ":", "at", "to")))
             if not glued:
                 return None
@@ -370,6 +420,114 @@ class InterviewerAgent:
             if self.awaiting == "metric":
                 req.meta.pop("_fresh_metric", None)
             self.awaiting = order[order.index(self.awaiting) + 1]
+
+    # ------------------------------------------------------- dataset awareness
+
+    def set_dataset_context(self, ctx: dict[str, Any] | None) -> None:
+        """Attach a structured description of the live dataset + project memory.
+
+        Supplied by the orchestrator (which owns the store). When absent the
+        interview behaves exactly as before.
+        """
+        self.dataset_context = ctx or {}
+
+    def _infer_from_dataset(self) -> list[str]:
+        """Fill requirements from the real dataset and the project's memory.
+
+        Only clearly-known facts are applied — the data source recorded in
+        provenance, the project's remembered target (or an explicit target-like
+        column), and the detected task type. Ambiguous choices are left for the
+        interview to ask about, never invented.
+        """
+        ctx = self.dataset_context or {}
+        if not ctx.get("available"):
+            return []
+        req = self.requirements
+        cols = [str(c) for c in (ctx.get("columns") or [])]
+        if not cols:
+            return []
+        notes: list[str] = []
+
+        # The project already has a working table: don't ask "where should I get
+        # the dataset?" as if no data existed.
+        prov = ctx.get("provenance") or {}
+        src = str(prov.get("source") or "").strip().lower()
+        if src and not req.meta.get("source_explicit"):
+            req.dataset_source = src
+            if prov.get("path"):
+                req.dataset_path = str(prov["path"])
+            req.meta["source_explicit"] = True
+            notes.append(f"using the loaded {src} data")
+
+        # Target column: prefer the project's remembered target, else the first
+        # explicit target/label-like column. Never silently invent one.
+        if req.target_column is None:
+            remembered = ctx.get("target")
+            candidate: str | None = None
+            if remembered and str(remembered) in cols:
+                candidate = str(remembered)
+            else:
+                lower_map = {c.lower(): c for c in cols}
+                for cand in _TARGET_COLUMN_CANDIDATES:
+                    if cand in lower_map:
+                        candidate = lower_map[cand]
+                        break
+            if candidate:
+                req.target_column = candidate
+                req.meta["target_inferred"] = True
+                notes.append(f"target column '{candidate}'")
+
+        # Task type detected from the real target values.
+        task = ctx.get("task_type")
+        if task and task != "auto":
+            req.task_type = task
+
+        return notes
+
+    def _dataset_briefing(self) -> str:
+        """One-time, grounded summary of the live dataset and project memory."""
+        ctx = self.dataset_context or {}
+        req = self.requirements
+        if not ctx.get("available") or req.meta.get("dataset_announced"):
+            return ""
+        cols = [str(c) for c in (ctx.get("columns") or [])]
+        if not cols:
+            return ""
+        req.meta["dataset_announced"] = True
+
+        rows = int(ctx.get("rows") or 0)
+        prov = ctx.get("provenance") or {}
+        stats = ctx.get("stats") or {}
+        target = req.target_column or ctx.get("target")
+        task = ctx.get("task_type") or "auto"
+
+        src = prov.get("source")
+        path = prov.get("path")
+        origin = f" (source: {src}{', ' + str(path) if path else ''})" if src else ""
+        lines = [
+            f"I can see your working dataset — **{rows:,} rows × {len(cols)} columns**{origin}."
+        ]
+
+        if req.goal:
+            lines.append(f"Project goal on record: **{req.goal}**.")
+
+        if target and str(target) in cols:
+            st = stats.get(str(target), {})
+            extra = []
+            if st.get("uniques") is not None:
+                extra.append(f"{int(st['uniques']):,} distinct values")
+            if st.get("type"):
+                extra.append(str(st["type"]))
+            suffix = f" ({', '.join(extra)})" if extra else ""
+            task_s = "" if task in ("", "auto") else f", looks like a **{task}** task"
+            lines.append(f"Target: **{target}**{suffix}{task_s}.")
+        else:
+            lines.append("I couldn't pin down a target column from the data, so I'll ask.")
+
+        shown = ", ".join(f"`{c}`" for c in cols[:20])
+        more = "" if len(cols) <= 20 else f" (+{len(cols) - 20} more)"
+        lines.append(f"Columns: {shown}{more}.")
+        return "\n".join(lines)
 
     @staticmethod
     def _with_notes(notes: list[str]) -> str:
@@ -420,14 +578,22 @@ class InterviewerAgent:
     # ------------------------------------------------------- structured actions
 
     _MODEL_ALIASES = {
-        "random forest": "random_forest", "randomforest": "random_forest", "rf": "random_forest",
-        "xgboost": "xgboost", "xgb": "xgboost",
-        "lightgbm": "lightgbm", "lgbm": "lightgbm",
+        "random forest": "random_forest",
+        "randomforest": "random_forest",
+        "rf": "random_forest",
+        "xgboost": "xgboost",
+        "xgb": "xgboost",
+        "lightgbm": "lightgbm",
+        "lgbm": "lightgbm",
         "logistic regression": "logistic_regression",
-        "svm": "svm", "support vector": "svm",
-        "neural network": "neural_network", "mlp": "neural_network",
-        "gradient boosting": "gradient_boosting", "gbm": "gradient_boosting",
-        "linear regression": "linear_regression", "ridge": "ridge",
+        "svm": "svm",
+        "support vector": "svm",
+        "neural network": "neural_network",
+        "mlp": "neural_network",
+        "gradient boosting": "gradient_boosting",
+        "gbm": "gradient_boosting",
+        "linear regression": "linear_regression",
+        "ridge": "ridge",
     }
     _COLUMN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -497,7 +663,10 @@ class InterviewerAgent:
         if m:
             return {"type": "set_target_column", "column": m.group(1), "destructive": False}
 
-        if re.search(r"use (?:the )?same dataset|reuse (?:the )?(?:last|previous) dataset|use (?:the )?last dataset", lower):
+        if re.search(
+            r"use (?:the )?same dataset|reuse (?:the )?(?:last|previous) dataset|use (?:the )?last dataset",
+            lower,
+        ):
             dataset = (self.memory or {}).get("dataset") or {}
             if dataset.get("source"):
                 return {"type": "use_dataset", "destructive": False}

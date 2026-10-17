@@ -64,12 +64,14 @@ class Settings(BaseSettings):
     mlflow_tracking_uri: str = Field(default="./mlruns", alias="MLFLOW_TRACKING_URI")
     mlflow_experiment_name: str = Field(default="interactive_automl", alias="MLFLOW_EXPERIMENT_NAME")
 
-    # LLM provider: "local" (no keys needed), "openai", "anthropic"
+    # LLM provider: "local" (no keys needed), "openai", "anthropic", "gemini"
     llm_provider: str = Field(default="local", alias="LLM_PROVIDER")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
     anthropic_model: str = Field(default="claude-3-5-haiku-latest", alias="ANTHROPIC_MODEL")
+    gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
+    gemini_model: str = Field(default="gemini-2.0-flash", alias="GEMINI_MODEL")
 
     # Paper research & knowledge retrieval (HTTP-based, no MCP daemon required)
     semantic_scholar_api_key: str = Field(default="", alias="SEMANTIC_SCHOLAR_API_KEY")

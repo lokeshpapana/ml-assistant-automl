@@ -13,21 +13,23 @@ import re
 import threading
 import time
 import uuid
+from datetime import UTC
 from pathlib import Path
 from typing import Any
 
+from backend import runlog
 from backend.agents import (
     DataFetcherAgent,
     InterviewerAgent,
     ResearchAgent,
     TrainerAgent,
 )
-from backend.agents.common import Requirements, json_safe, met_target, parse_target_spec
+from backend.agents.common import _TARGET_COLUMN_CANDIDATES as _TARGET_CANDIDATES
+from backend.agents.common import Requirements, json_safe, parse_target_spec
 from backend.central_store import get_central_store
 from backend.config import settings
 from backend.mlflow_tracker import get_tracker
 from backend.ws_bus import get_event_bus
-from backend import runlog
 
 IDLE = "IDLE"
 INTERVIEW = "INTERVIEW"
@@ -57,8 +59,14 @@ _STATUS_EVENT = {
     "FAILED": "run_failed",
 }
 _STAGE_PROGRESS = {
-    "IDLE": 0.0, "STARTING": 2.0, "DATA_FETCH": 20.0, "RESEARCH": 40.0,
-    "TRAINING": 60.0, "PAUSED": 100.0, "DONE": 100.0, "FAILED": 100.0,
+    "IDLE": 0.0,
+    "STARTING": 2.0,
+    "DATA_FETCH": 20.0,
+    "RESEARCH": 40.0,
+    "TRAINING": 60.0,
+    "PAUSED": 100.0,
+    "DONE": 100.0,
+    "FAILED": 100.0,
 }
 _CHAT_CONFIRM = {"yes", "yeah", "yep", "confirm", "confirmed", "do it", "go ahead"}
 
@@ -66,9 +74,17 @@ _CHAT_CONFIRM = {"yes", "yeah", "yep", "confirm", "confirmed", "do it", "go ahea
 # context keys (e.g. a chat-driven "yes" with project_id) must preserve the
 # live interview instead of resetting to empty defaults.
 _RUN_CONFIG_KEYS = {
-    "goal", "metric", "metric_expr", "dataset_source", "dataset_path",
-    "dataset_query", "max_rows", "target_column", "max_iterations",
-    "feature_engineering_every_n", "chat_mode",
+    "goal",
+    "metric",
+    "metric_expr",
+    "dataset_source",
+    "dataset_path",
+    "dataset_query",
+    "max_rows",
+    "target_column",
+    "max_iterations",
+    "feature_engineering_every_n",
+    "chat_mode",
 }
 
 
@@ -216,10 +232,13 @@ class AutoMLOrchestrator:
                     f"{self.requirements.target_value} from {self.requirements.dataset_source}.",
                 )
 
-            if not self.requirements.dataset_path and self.upload_path:
-                if self.requirements.dataset_source in ("upload", "local", ""):
-                    self.requirements.dataset_source = "upload"
-                    self.requirements.dataset_path = self.upload_path
+            if (
+                not self.requirements.dataset_path
+                and self.upload_path
+                and self.requirements.dataset_source in ("upload", "local", "")
+            ):
+                self.requirements.dataset_source = "upload"
+                self.requirements.dataset_path = self.upload_path
 
             self._emit({"type": "status", "state": "STARTING", "message": "Orchestrator starting…"})
             self._emit(
@@ -230,12 +249,17 @@ class AutoMLOrchestrator:
                 }
             )
 
-            self._worker = threading.Thread(target=self._run_loop, daemon=True, name="automl-orchestrator")
+            self._worker = threading.Thread(
+                target=self._run_loop, daemon=True, name="automl-orchestrator"
+            )
             self._worker.start()
             return {"status": "started", "state": self.state}
 
     def resume_from(
-        self, run_id: str | None = None, project_id: str | None = None, session_id: str | None = None
+        self,
+        run_id: str | None = None,
+        project_id: str | None = None,
+        session_id: str | None = None,
     ) -> dict[str, Any]:
         """Continue a stopped run from its latest checkpoint.
 
@@ -253,7 +277,10 @@ class AutoMLOrchestrator:
                     run_id = runs[0]["run_id"]
                     break
         if not run_id:
-            return {"status": "no_resumable_run", "detail": "No previous run recorded for this project."}
+            return {
+                "status": "no_resumable_run",
+                "detail": "No previous run recorded for this project.",
+            }
         source = runlog.get_run(run_id)
         if source is None:
             return {"status": "not_found", "detail": f"Run {run_id} is not stored."}
@@ -278,7 +305,8 @@ class AutoMLOrchestrator:
         result = self.start(cfg)
         if result.get("status") == "started" and project_id:
             runlog.remember(
-                project_id, "decisions",
+                project_id,
+                "decisions",
                 f"Run {self.run_id} resumes {run_id} from checkpoint (iteration {done}).",
             )
         return {**result, "resumed_from": run_id, "resume_index": done}
@@ -457,21 +485,31 @@ class AutoMLOrchestrator:
                     "text": f"Run failed: {self.error}",
                 }
             )
-            from datetime import datetime, timezone
+            from datetime import datetime
 
             runlog.update_run(
-                self.run_id, status="failed", error=self.error,
-                completed_at=datetime.now(timezone.utc),
+                self.run_id,
+                status="failed",
+                error=self.error,
+                completed_at=datetime.now(UTC),
             )
             if self.project_id:
-                runlog.remember(self.project_id, "warnings", f"Run {self.run_id} failed: {self.error}")
+                runlog.remember(
+                    self.project_id, "warnings", f"Run {self.run_id} failed: {self.error}"
+                )
 
         finally:
             self.finished_at = time.strftime("%Y-%m-%dT%H:%M:%S")
-            self._emit({"type": "status", "state": self.state, "message": f"Orchestrator final state: {self.state}"})
+            self._emit(
+                {
+                    "type": "status",
+                    "state": self.state,
+                    "message": f"Orchestrator final state: {self.state}",
+                }
+            )
 
     def _finalize(self) -> None:
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         best_path = self.trainer.export_best_model() if self.trainer else None
         if best_path:
@@ -503,7 +541,7 @@ class AutoMLOrchestrator:
                     for f in self.feature_history
                 ]
             ),
-            completed_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(UTC),
         )
         if self.project_id and best:
             runlog.remember(self.project_id, "best", best)
@@ -556,7 +594,8 @@ class AutoMLOrchestrator:
                     return {"status": "stop_signal_sent"}
                 self._agent_reply(
                     "I'm in the middle of training — use the STOP button to pause, or wait.",
-                    pid, sid,
+                    pid,
+                    sid,
                 )
                 return {"status": "ok"}
             lowered = text.strip().lower()
@@ -571,14 +610,18 @@ class AutoMLOrchestrator:
                 return {"status": "ok"}
             # 0. Resume/continue from the last checkpoint (chat-addressable).
             if re.search(r"\b(resume|continue)\b", lowered) and (
-                "run" in lowered or "training" in lowered or "paused" in lowered or lowered.strip() in ("resume", "continue")
+                "run" in lowered
+                or "training" in lowered
+                or "paused" in lowered
+                or lowered.strip() in ("resume", "continue")
             ):
                 result = self.resume_from(project_id=pid, session_id=sid)
                 if result.get("status") == "started":
                     self._agent_reply(
                         f"Resuming {result['resumed_from']} from checkpoint "
                         f"(continuing at iteration {result['resume_index'] + 1}).",
-                        pid, sid,
+                        pid,
+                        sid,
                     )
                 else:
                     self._agent_reply(
@@ -603,7 +646,8 @@ class AutoMLOrchestrator:
                     self._agent_reply(action["prompt"], pid, sid)
                     return {"status": "ok"}
                 prefix = self._apply_chat_action(action) + "\n"
-            # 3. Normal interview flow.
+            # 3. Normal interview flow — grounded in the live dataset + project.
+            self.interviewer.set_dataset_context(self._dataset_context(pid))
             reply, advanced = self.interviewer.ingest_chat(text)
             self.requirements = self.interviewer.requirements
             self._agent_reply(prefix + reply if prefix else reply, pid, sid)
@@ -630,18 +674,109 @@ class AutoMLOrchestrator:
         interrogative/imperative AND a data noun. A bare "5000 rows" answer is
         not a question, so it keeps flowing through the interview.
         """
-        asks = ("what", "which", "how many", "how much", "show", "list", "tell", "describe",
-                "details", "detail", "columns?", "features?", "info", "information", "looks like")
-        nouns = ("dataset", "data", "rows", "row", "column", "feature", "table", "preview",
-                 "records", "samples", "variables", "attributes")
+        asks = (
+            "what",
+            "which",
+            "how many",
+            "how much",
+            "show",
+            "list",
+            "tell",
+            "describe",
+            "details",
+            "detail",
+            "columns?",
+            "features?",
+            "info",
+            "information",
+            "looks like",
+        )
+        nouns = (
+            "dataset",
+            "data",
+            "rows",
+            "row",
+            "column",
+            "feature",
+            "table",
+            "preview",
+            "records",
+            "samples",
+            "variables",
+            "attributes",
+        )
         has_ask = any(a in lowered for a in asks)
         has_noun = any(n in lowered for n in nouns)
         if not (has_ask and has_noun):
             return False
         # Never hijack interview answers or action intents.
-        if re.search(r"\b(use|upload|change|set|remove|drop|delete|disable|enable)\b", lowered):
-            return False
-        return True
+        return not bool(
+            re.search(r"\b(use|upload|change|set|remove|drop|delete|disable|enable)\b", lowered)
+        )
+
+    def _dataset_context(self, pid: str | None = None) -> dict[str, Any]:
+        """Structured, real description of the working table + project memory.
+
+        Shared by dataset Q&A, the facts card, and the interview agent, so all
+        three reason about the same single source of truth. Returns ``{}`` when
+        no dataset is loaded. Never estimates: every value comes from the store
+        or the project's recorded memory.
+        """
+        try:
+            cols = self.store.columns()
+            dtypes = self.store.dtypes()
+            stats = self.store.column_stats()["columns"]
+        except Exception:  # noqa: BLE001
+            return {}
+        if not cols:
+            return {}
+        try:
+            rows = self.store.preview(limit=1).get("rows", 0)
+        except Exception:
+            rows = 0
+        prov: dict[str, Any] = {}
+        target = self.requirements.target_column
+        if pid:
+            try:
+                mem = runlog.get_memory(str(pid))
+                prov = mem.get("dataset") or {}
+                target = target or mem.get("target")
+            except Exception:
+                prov = {}
+        if target and target not in cols:
+            target = None
+        # Fall back to an explicit target/label-like column only — never the
+        # arbitrary last column, which would be an invented target.
+        if not target:
+            lower_map = {str(c).lower(): c for c in cols}
+            for cand in _TARGET_CANDIDATES:
+                if cand in lower_map:
+                    target = lower_map[cand]
+                    break
+        # Detect the task type from a real sample (canonical detector), not from
+        # column names alone. Cheap: at most 500 rows.
+        task_type = "auto"
+        if target:
+            try:
+                import pandas as pd
+
+                sample = self.store.preview(limit=500).get("preview") or []
+                if sample:
+                    from backend.agents.common import detect_task
+
+                    _, task_type, _ = detect_task(pd.DataFrame(sample), explicit_target=target)
+            except Exception:  # noqa: BLE001
+                task_type = "auto"
+        return {
+            "available": True,
+            "rows": rows,
+            "columns": list(cols),
+            "dtypes": dtypes,
+            "stats": stats,
+            "provenance": prov or {},
+            "target": target,
+            "task_type": task_type,
+        }
 
     def _dataset_fact_sheet(self, pid: str | None = None) -> tuple[str, dict | None]:
         """A factual description of the live working table, computed from the
@@ -650,23 +785,15 @@ class AutoMLOrchestrator:
         Returns (text_payload, structured_payload) so the UI can render the
         facts as a card as well as prose.
         """
-        try:
-            cols = self.store.columns()
-            dtypes = self.store.dtypes()
-            stats = self.store.column_stats()["columns"]
-        except Exception as exc:  # noqa: BLE001
-            return f"Right now there's no working dataset loaded to describe: {exc}", None
-        try:
-            preview = self.store.preview(limit=1)
-            rows = preview.get("rows", 0)
-        except Exception:
-            rows = 0
-        prov = {}
-        if pid:
-            try:
-                prov = runlog.get_memory(str(pid)).get("dataset") or {}
-            except Exception:
-                prov = {}
+        ctx = self._dataset_context(pid)
+        if not ctx:
+            return "Right now there's no working dataset loaded to describe.", None
+        cols = ctx["columns"]
+        dtypes = ctx["dtypes"]
+        stats = ctx["stats"]
+        rows = ctx["rows"]
+        prov = ctx["provenance"]
+        target = ctx["target"]
         prov_parts = []
         if prov.get("source"):
             prov_parts.append(f"source={prov['source']}")
@@ -675,12 +802,6 @@ class AutoMLOrchestrator:
         if prov.get("imported_snapshot_of"):
             prov_parts.append(f"imported snapshot of run {prov['imported_snapshot_of']}")
         prov_str = (" (" + ", ".join(prov_parts) + ")") if prov_parts else ""
-        target = self.requirements.target_column
-        if not target and pid:
-            try:
-                target = runlog.get_memory(str(pid)).get("target")
-            except Exception:
-                target = None
         lines = [
             f"The working table holds {rows:,} rows across {len(cols)} columns{prov_str}.\n"
             "Here is every feature with its real type and statistics:"
@@ -694,21 +815,27 @@ class AutoMLOrchestrator:
             if "uniques" in st and st["uniques"] is not None:
                 parts.append(f"{st['uniques']:,} unique")
             if "min" in st:
-                parts.append(f"range {self._num(st['min'])}–{self._num(st['max'])} (mean {self._num(st['mean'])})")
+                parts.append(
+                    f"range {self._num(st['min'])}–{self._num(st['max'])} (mean {self._num(st['mean'])})"
+                )
             elif st.get("top"):
                 parts.append("top: " + ", ".join(f"'{v}'" for v in st["top"][:5]))
             if c == target:
                 parts.append("**target**")
             lines.append("• " + " · ".join(parts))
-        payload = {
-            "rows": rows,
-            "columns": list(cols),
-            "preview": {"rows": rows, "columns": list(cols)},
-            "stats": stats,
-            "dtypes": dtypes,
-            "provenance": prov or None,
-            "target": target,
-        } if (cols and stats) else None
+        payload = (
+            {
+                "rows": rows,
+                "columns": list(cols),
+                "preview": {"rows": rows, "columns": list(cols)},
+                "stats": stats,
+                "dtypes": dtypes,
+                "provenance": prov or None,
+                "target": target,
+            }
+            if (cols and stats)
+            else None
+        )
         return "\n".join(lines), payload
 
     @staticmethod
@@ -723,7 +850,9 @@ class AutoMLOrchestrator:
             return f"{f:.3e}"
         return f"{f:,.4f}".rstrip("0").rstrip(".")
 
-    def _agent_reply(self, text: str, pid: str | None, sid: str | None, dataset: dict | None = None) -> None:
+    def _agent_reply(
+        self, text: str, pid: str | None, sid: str | None, dataset: dict | None = None
+    ) -> None:
         """Emit an agent turn, persist it, and compact oversized sessions.
 
         The event is tagged with the *chat's* project (not the currently running
@@ -756,8 +885,14 @@ class AutoMLOrchestrator:
             model = action.get("model", "")
             req.meta["model_hint"] = model
             if self.project_id:
-                runlog.remember(self.project_id, "model_decisions", f"Chat selected {model} as next starting model.")
-            return f"Noted — I'll start with {model} on the next run. Anything else before we train?"
+                runlog.remember(
+                    self.project_id,
+                    "model_decisions",
+                    f"Chat selected {model} as next starting model.",
+                )
+            return (
+                f"Noted — I'll start with {model} on the next run. Anything else before we train?"
+            )
 
         if atype == "remove_feature":
             return self.remove_feature(action.get("column", ""))
@@ -819,7 +954,9 @@ class AutoMLOrchestrator:
             current = mem.get("excluded_features") or []
             if column not in current:
                 runlog.remember(pid, "excluded_features", current + [column])
-            runlog.remember(pid, "feature_decisions", f"Disabled feature '{column}' (excluded from training).")
+            runlog.remember(
+                pid, "feature_decisions", f"Disabled feature '{column}' (excluded from training)."
+            )
         return f"Disabled '{column}' — it will be skipped in the next run. Re-enable anytime."
 
     def enable_feature(self, column: str, project_id: str | None = None) -> str:
@@ -895,8 +1032,12 @@ class AutoMLOrchestrator:
             return self.store.preview(limit=limit)
         except Exception as exc:  # noqa: BLE001
             return {
-                "rows": 0, "columns": [], "dtypes": {}, "preview": [],
-                "limit": limit, "unavailable": str(exc),
+                "rows": 0,
+                "columns": [],
+                "dtypes": {},
+                "preview": [],
+                "limit": limit,
+                "unavailable": str(exc),
             }
 
     def leaderboard(self) -> dict[str, Any]:
@@ -1015,7 +1156,10 @@ class AutoMLOrchestrator:
             progress = self._progress_for(state, payload.get("iteration"))
         elif etype == "best_model_ready":
             canonical = "model_selected"
-            metadata = {"path": payload.get("path"), "best": _safe(self.trainer.best if self.trainer else None)}
+            metadata = {
+                "path": payload.get("path"),
+                "best": _safe(self.trainer.best if self.trainer else None),
+            }
             progress = 100.0
 
         if canonical is None:
@@ -1030,17 +1174,23 @@ class AutoMLOrchestrator:
         if state == "TRAINING" and self.feature_history and not self._research_completed_logged:
             self._research_completed_logged = True
             runlog.log_event(
-                self.run_id, "research_completed",
+                self.run_id,
+                "research_completed",
                 message=f"Research applied {len(self.feature_history)} feature(s).",
-                stage=state, progress=55.0,
+                stage=state,
+                progress=55.0,
                 metadata={"features": _safe(self.feature_history)},
             )
         runlog.log_event(
-            self.run_id, canonical,
+            self.run_id,
+            canonical,
             message=payload.get("message") or payload.get("text"),
-            status=state, stage=state, progress=progress,
+            status=state,
+            stage=state,
+            progress=progress,
             duration_ms=(payload.get("training_time_seconds") or 0) * 1000
-            if etype == "iteration" and payload.get("training_time_seconds") else None,
+            if etype == "iteration" and payload.get("training_time_seconds")
+            else None,
             metadata=_safe(metadata),
         )
         if etype == "iteration":

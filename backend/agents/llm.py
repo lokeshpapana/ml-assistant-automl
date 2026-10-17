@@ -1,8 +1,8 @@
 """LLM provider abstraction for the multi-agent engine.
 
 Default provider is ``local`` — fully offline/deterministic, no API key, no cloud.
-``openai`` and ``anthropic`` providers are implemented over plain HTTP (httpx) and
-are only activated when the matching key is present in the environment.
+``openai``, ``anthropic`` and ``gemini`` providers are implemented over plain HTTP
+(httpx) and are only activated when the matching key is present in the environment.
 """
 
 from __future__ import annotations
@@ -108,10 +108,61 @@ class AnthropicProvider(BaseLLM):
         return "".join(block.get("text", "") for block in data.get("content", []))
 
 
+class GeminiProvider(BaseLLM):
+    name = "gemini"
+
+    def __init__(self, api_key: str, model: str):
+        self.api_key = api_key
+        self.model = model
+
+    def available(self) -> bool:
+        return bool(self.api_key)
+
+    def chat(self, messages: list[dict[str, str]], **kwargs: Any) -> str:
+        import httpx
+
+        # Gemini uses "model" for assistant turns and a top-level
+        # systemInstruction; map our neutral roles onto that shape.
+        system = ""
+        contents: list[dict[str, Any]] = []
+        for m in messages:
+            if m.get("role") == "system":
+                system = m["content"]
+                continue
+            role = "model" if m.get("role") == "assistant" else "user"
+            contents.append({"role": role, "parts": [{"text": m.get("content", "")}]})
+
+        body: dict[str, Any] = {
+            "contents": contents,
+            "generationConfig": {
+                "temperature": kwargs.get("temperature", 0.2),
+                "maxOutputTokens": kwargs.get("max_tokens", 600),
+            },
+        }
+        if system:
+            body["systemInstruction"] = {"parts": [{"text": system}]}
+
+        resp = httpx.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
+            headers={"x-goog-api-key": self.api_key, "content-type": "application/json"},
+            json=body,
+            timeout=kwargs.get("timeout", 60),
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        candidates = data.get("candidates") or []
+        if not candidates:
+            return ""
+        parts = candidates[0].get("content", {}).get("parts", [])
+        return "".join(p.get("text", "") for p in parts)
+
+
 def get_llm() -> BaseLLM:
     provider = settings.llm_provider.lower()
     if provider == "openai" and settings.openai_api_key:
         return OpenAIProvider(settings.openai_api_key, settings.openai_model)
     if provider == "anthropic" and settings.anthropic_api_key:
         return AnthropicProvider(settings.anthropic_api_key, settings.anthropic_model)
+    if provider == "gemini" and settings.gemini_api_key:
+        return GeminiProvider(settings.gemini_api_key, settings.gemini_model)
     return LocalLLM()

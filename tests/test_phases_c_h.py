@@ -148,6 +148,68 @@ async def test_chat_confirm_gate_requires_explicit_yes():
     assert ag.is_confirmed() is True
 
 
+def _dataset_ctx():
+    return {
+        "available": True,
+        "rows": 381100,
+        "columns": ["age", "spend", "category", "target"],
+        "dtypes": {
+            "age": "BIGINT",
+            "spend": "DOUBLE",
+            "category": "VARCHAR",
+            "target": "BIGINT",
+        },
+        "stats": {"target": {"type": "BIGINT", "uniques": 2}},
+        "provenance": {"source": "upload", "path": "uploads/x.csv"},
+        "target": "target",
+        "task_type": "classification",
+    }
+
+
+def test_interviewer_grounds_interview_in_loaded_dataset():
+    """Regression: the agent used to take rows/target blind, ignoring both the
+    loaded dataset and what the project actually is."""
+    from backend.agents.interviewer import InterviewerAgent
+
+    ag = InterviewerAgent()
+    ag.set_dataset_context(_dataset_ctx())
+    reply, advanced = ag.ingest_chat("predict churn")
+
+    assert advanced is True
+    assert "381,100 rows" in reply
+    assert "upload" in reply
+    assert "**target**" in reply
+    assert "classification" in reply
+    # Nothing blind: source + target came from the data/project, so the source
+    # and target-column questions are skipped and we land on the metric question.
+    assert ag.requirements.target_column == "target"
+    assert ag.requirements.dataset_source == "upload"
+    assert ag.awaiting == "metric"
+
+
+def test_interviewer_dataset_briefing_is_one_time():
+    from backend.agents.interviewer import InterviewerAgent
+
+    ag = InterviewerAgent()
+    ag.set_dataset_context(_dataset_ctx())
+    first, _ = ag.ingest_chat("predict churn")
+    second, _ = ag.ingest_chat("accuracy >= 0.9")
+
+    assert "I can see your working dataset" in first
+    assert "I can see your working dataset" not in second
+
+
+def test_interviewer_without_dataset_context_is_unchanged():
+    from backend.agents.interviewer import InterviewerAgent
+
+    ag = InterviewerAgent()
+    reply, _ = ag.ingest_chat("predict churn")
+    assert "I can see your working dataset" not in reply
+    assert ag.requirements.target_column is None
+    assert ag.awaiting == "metric"
+
+
+
 def test_parse_action_recognizes_intents():
     from backend.agents.common import Requirements
     from backend.agents.interviewer import InterviewerAgent
