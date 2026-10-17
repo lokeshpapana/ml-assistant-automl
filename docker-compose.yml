@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: ml_assistant
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +22,7 @@ services:
     image: redis:7-alpine
     container_name: ml-assistant-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -36,6 +36,8 @@ services:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.backend
     container_name: ml-assistant-backend
+    security_opt:
+      - label:disable
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/ml_assistant
       REDIS_HOST: redis
@@ -57,6 +59,8 @@ services:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.backend
     container_name: ml-assistant-celery-worker
+    security_opt:
+      - label:disable
     command: celery -A backend.tasks worker --loglevel=info --concurrency=2
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/ml_assistant
