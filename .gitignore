@@ -34,7 +34,11 @@ mlruns/
 
 # ---- Local databases ----
 automl_app.db
+automl_app.db-shm
+automl_app.db-wal
 *.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
 
 # ---- Environment & secrets ----
 .env
