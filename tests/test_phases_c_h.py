@@ -209,6 +209,34 @@ def test_interviewer_without_dataset_context_is_unchanged():
     assert ag.awaiting == "metric"
 
 
+def test_metric_answer_never_becomes_a_row_count():
+    """Regression: a metric like 'accuracy >= 0.92' arriving at the rows stage
+    had its digits stolen as a row count, capping training at 0 rows."""
+    from backend.agents.interviewer import InterviewerAgent
+
+    ag = InterviewerAgent()
+    ag.set_dataset_context(_dataset_ctx())
+    ag.ingest_chat("predict customer default")  # -> metric
+    ag.apply_defaults()
+    ag.awaiting = "rows"
+
+    reply, _ = ag.ingest_chat("accuracy >= 0.92")
+    assert ag.requirements.max_rows == 50_000
+    assert "to 0 rows" not in reply
+    assert ag.requirements.metric == "accuracy"
+    assert ag.requirements.target_value == 0.92
+
+
+def test_row_cap_still_parses_a_real_row_answer():
+    from backend.agents.interviewer import InterviewerAgent
+
+    ag = InterviewerAgent()
+    ag.awaiting = "rows"
+    ag.ingest_chat("25000 rows")
+    assert ag.requirements.max_rows == 25_000
+    assert ag.requirements.meta.get("rows_explicit") is True
+
+
 
 def test_parse_action_recognizes_intents():
     from backend.agents.common import Requirements

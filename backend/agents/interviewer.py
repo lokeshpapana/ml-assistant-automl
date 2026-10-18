@@ -24,6 +24,10 @@ _QUESTION_ORDER = ["goal", "metric", "source", "rows", "target_column", "confirm
 
 _INT_MATCH = re.compile(r"(\d[\d,]*)")
 
+# A row count is a bare whole number, optionally with a k/m suffix. Decimals such
+# as the "0.92" in "accuracy >= 0.92" must never be read as a row count.
+_ROWS_INT_RE = re.compile(r"(?<![\d.])(\d[\d,]*)\s*(?:k|m)?(?![\d.])", re.IGNORECASE)
+
 _METRIC_NAME_RE = (
     r"accuracy|acc|f1|precision|recall|auc|roc(?:_auc)?|logloss|rmse|mae|mse|r2(?:_score)?"
 )
@@ -128,7 +132,9 @@ class InterviewerAgent:
 
     def apply_defaults(self) -> Requirements:
         req = self.requirements
-        req.max_rows = req.max_rows or settings.automl_default_max_rows
+        # A row cap must always be a usable number: never 0 or negative.
+        if req.max_rows <= 0:
+            req.max_rows = settings.automl_default_max_rows
         req.metric = req.metric or settings.automl_default_metric
         if req.target_value <= 0 and req.metric not in ("rmse", "mae", "mse"):
             req.target_value = settings.automl_default_target_value
@@ -239,6 +245,9 @@ class InterviewerAgent:
         # message like "predict churn at 90% accuracy from my csv, 10k rows"
         # can fill several requirements at once.
         notes = self._absorb_signals(text)
+        # A message that carried a target metric must not have its digits stolen
+        # as a row count by a later stage ("accuracy >= 0.92" -> 0 rows).
+        metric_in_msg = bool(req.meta.get("_fresh_metric"))
 
         if self.awaiting == "goal":
             req.goal = text
@@ -256,7 +265,7 @@ class InterviewerAgent:
                 req.dataset_source = self._normalize_source(text)
             self.awaiting = "rows"
         elif self.awaiting == "rows":
-            match = _INT_MATCH.search(text)
+            match = None if metric_in_msg else _ROWS_INT_RE.search(text)
             if match:
                 req.max_rows = int(match.group(1).replace(",", ""))
                 req.meta["rows_explicit"] = True
