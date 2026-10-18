@@ -22,8 +22,6 @@ from backend.config import settings
 
 _QUESTION_ORDER = ["goal", "metric", "source", "rows", "target_column", "confirm"]
 
-_INT_MATCH = re.compile(r"(\d[\d,]*)")
-
 # A row count is a bare whole number, optionally with a k/m suffix. Decimals such
 # as the "0.92" in "accuracy >= 0.92" must never be read as a row count.
 _ROWS_INT_RE = re.compile(r"(?<![\d.])(\d[\d,]*)\s*(?:k|m)?(?![\d.])", re.IGNORECASE)
