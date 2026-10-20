@@ -21,6 +21,12 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
+from backend.config import settings
+from backend.database import async_session_maker, get_async_session
+from backend.orchestrator import get_orchestrator
+from backend.project_context import extract_run_context, validate_run_context
+from backend.research import fetch_paper_content, search_papers
+from backend.ws_bus import get_event_bus
 from fastapi import (
     APIRouter,
     Depends,
@@ -33,13 +39,6 @@ from fastapi import (
 )
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.config import settings
-from backend.database import async_session_maker, get_async_session
-from backend.orchestrator import get_orchestrator
-from backend.project_context import extract_run_context, validate_run_context
-from backend.research import fetch_paper_content, search_papers
-from backend.ws_bus import get_event_bus
 
 router = APIRouter(tags=["automl"])
 
@@ -223,8 +222,8 @@ async def resume_automl(
 
     try:
         pid = str(_UUID(str(project_id)))
-    except (ValueError, AttributeError, TypeError):
-        raise HTTPException(status_code=400, detail=f"Invalid project_id: {project_id!r}")
+    except (ValueError, AttributeError, TypeError) as err:
+        raise HTTPException(status_code=400, detail=f"Invalid project_id: {project_id!r}") from err
     validated = await validate_run_context(pid, None, db)
     result = get_orchestrator().resume_from(
         run_id=payload.get("run_id"),
@@ -341,7 +340,7 @@ async def set_target(body: dict) -> dict:
     try:
         cols = orch.store.columns()
     except Exception as exc:
-        raise HTTPException(status_code=404, detail=f"No working dataset loaded: {exc}")
+        raise HTTPException(status_code=404, detail=f"No working dataset loaded: {exc}") from exc
     if col not in cols:
         raise HTTPException(status_code=400, detail=f"Column '{col}' not in working dataset.")
     orch.requirements.target_column = col
@@ -397,7 +396,7 @@ async def automl_websocket(ws: WebSocket) -> None:
                     message = await _validate_ws_start(message, ws)
                     if message is None:
                         continue
-                result = orch.handle_message(message)
+                result = await asyncio.to_thread(orch.handle_message, message)
                 if result:
                     await ws.send_json({"type": "ack", **result})
         except WebSocketDisconnect:

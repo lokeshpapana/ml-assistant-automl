@@ -111,6 +111,10 @@ class InterviewerAgent:
         self.pending_action: dict[str, Any] | None = None
         self.memory: dict[str, Any] = {}
         self.dataset_context: dict[str, Any] = {}
+        self._last_briefing = ""
+        self._last_notes: list[str] = []
+        self._last_question = ""
+        self._absorb_notes_cache: list[str] = []
 
     def reset(self, defaults: Requirements | None = None) -> None:
         self.session = InterviewerSession(requirements=defaults or Requirements())
@@ -217,12 +221,20 @@ class InterviewerAgent:
         target column, task type, prior goal). That context is announced once and
         the matching questions are skipped, so the agent reasons about *this* data
         and *this* project instead of asking blind for a row cap and a target.
+
+        The deterministic ``briefing`` (real facts), ``notes`` (decisions taken
+        this turn) and ``question`` (next required step) are also exposed so the
+        conversational layer can phrase them without being able to alter them.
         """
         self._infer_from_dataset()
         briefing = self._dataset_briefing()
+        self._last_briefing = briefing
         reply, advanced = self._ingest_chat_inner(text)
         if briefing:
             reply = f"{briefing}\n\n{reply}"
+        req = self.requirements
+        self._last_notes = self._absorb_notes_cache
+        self._last_question = "" if req.confirm else self.next_question()
         return reply, advanced
 
     def _ingest_chat_inner(self, text: str) -> tuple[str, bool]:
@@ -243,6 +255,7 @@ class InterviewerAgent:
         # message like "predict churn at 90% accuracy from my csv, 10k rows"
         # can fill several requirements at once.
         notes = self._absorb_signals(text)
+        self._absorb_notes_cache = notes
         # A message that carried a target metric must not have its digits stolen
         # as a row count by a later stage ("accuracy >= 0.92" -> 0 rows).
         metric_in_msg = bool(req.meta.get("_fresh_metric"))

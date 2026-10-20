@@ -19,6 +19,7 @@ from typing import Any
 
 from backend import runlog
 from backend.agents import (
+    AssistantAgent,
     DataFetcherAgent,
     InterviewerAgent,
     ResearchAgent,
@@ -107,6 +108,7 @@ class AutoMLOrchestrator:
         self.store = get_central_store()
 
         self.interviewer = InterviewerAgent()
+        self.assistant = AssistantAgent()
         self.data_fetcher = DataFetcherAgent()
         self.researcher = ResearchAgent()
 
@@ -648,9 +650,20 @@ class AutoMLOrchestrator:
                 prefix = self._apply_chat_action(action) + "\n"
             # 3. Normal interview flow — grounded in the live dataset + project.
             self.interviewer.set_dataset_context(self._dataset_context(pid))
-            reply, advanced = self.interviewer.ingest_chat(text)
+            _, advanced = self.interviewer.ingest_chat(text)
             self.requirements = self.interviewer.requirements
-            self._agent_reply(prefix + reply if prefix else reply, pid, sid)
+            # The LLM only phrases the deterministic reply: extraction, numeric
+            # parsing and control flow stay in the interviewer, so a bad
+            # generation cannot corrupt state or invent facts.
+            plan = self._reply_plan(pid)
+            message, source = self.assistant.compose(plan)
+            self._agent_reply(
+                prefix + message if prefix else message,
+                pid,
+                sid,
+                source=source,
+                provider_error=self.assistant.last_error,
+            )
             if advanced and self.interviewer.is_confirmed():
                 cfg: dict[str, Any] = {}
                 if self._chat_pid:
@@ -850,14 +863,63 @@ class AutoMLOrchestrator:
             return f"{f:.3e}"
         return f"{f:,.4f}".rstrip("0").rstrip(".")
 
+    def _reply_plan(self, pid: str | None) -> dict[str, Any]:
+        """Context for the conversational layer — real facts only.
+
+        The deterministic ``briefing`` (dataset/project facts) and
+        ``required_question`` (next step) are exposed so the assistant can phrase
+        them; the assistant re-appends them verbatim if the model drops them, so
+        a bad generation can never lose information or derail the interview.
+        """
+        mem = runlog.get_memory(pid) if pid else {}
+        ctx = self._dataset_context(pid) or {}
+        dataset = None
+        if ctx:
+            dataset = {
+                "rows": ctx.get("rows"),
+                "columns": ctx.get("columns"),
+                "dtypes": ctx.get("dtypes"),
+                "stats": ctx.get("stats"),
+                "provenance": ctx.get("provenance") or {},
+                "target": ctx.get("target"),
+                "task_type": ctx.get("task_type"),
+            }
+        context = {
+            "stage": self.interviewer.awaiting,
+            "memory": {
+                "goal": mem.get("goal"),
+                "target": mem.get("target"),
+                "task_type": mem.get("task_type"),
+                "constraints": mem.get("constraints") or [],
+                "decisions": (mem.get("decisions") or [])[-10:],
+            },
+            "dataset": dataset,
+        }
+        return {
+            "briefing": getattr(self.interviewer, "_last_briefing", "") or "",
+            "notes": getattr(self.interviewer, "_last_notes", []) or [],
+            "required_question": getattr(self.interviewer, "_last_question", "") or "",
+            "context": context,
+        }
+
     def _agent_reply(
-        self, text: str, pid: str | None, sid: str | None, dataset: dict | None = None
+        self,
+        text: str,
+        pid: str | None,
+        sid: str | None,
+        dataset: dict | None = None,
+        source: str = "assistant",
+        provider_error: str | None = None,
     ) -> None:
         """Emit an agent turn, persist it, and compact oversized sessions.
 
         The event is tagged with the *chat's* project (not the currently running
         one): conversation traffic must stay with the project it belongs to, or a
         project-scoped client would receive another project's replies.
+
+        ``source`` labels how the text was produced ("llm" | "fallback" |
+        "assistant") so the UI never presents a deterministic fallback as an
+        LLM answer. ``provider_error`` surfaces provider failures to the user.
         """
         payload: dict[str, Any] = {
             "type": "chat_response",
@@ -866,7 +928,10 @@ class AutoMLOrchestrator:
             "stage": self.interviewer.session.stage,
             "project_id": pid,
             "session_id": sid,
+            "source": source,
         }
+        if provider_error:
+            payload["provider_error"] = provider_error
         if dataset:
             payload["dataset"] = dataset
         self._emit(payload)

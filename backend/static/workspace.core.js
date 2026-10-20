@@ -610,7 +610,23 @@ function onEvent(m) {
   if (m.type === "chat_response") {
     const card = (m.dataset && m.dataset.columns && m.dataset.columns.length)
       ? datasetFactsCard(m.dataset) : "";
-    addMsg("agent", m.text, "interviewer", card);
+    const node = addMsg("agent", m.text, "interviewer", card);
+    if (node) {
+      // Label how the reply was produced so a deterministic fallback is never
+      // mistaken for an LLM answer, and surface provider failures honestly.
+      const source = m.source || "assistant";
+      const badge = source === "llm"
+        ? '<span class="src-badge llm" title="Composed by the configured LLM provider">LLM</span>'
+        : '<span class="src-badge" title="Built-in assistant (no LLM provider configured, or it was unavailable)">built-in</span>';
+      const who = node.querySelector(".who");
+      if (who) who.insertAdjacentHTML("beforeend", badge);
+      if (m.provider_error) {
+        const sys = document.createElement("div");
+        sys.className = "sysline";
+        sys.textContent = "Provider unavailable — using the built-in assistant. " + m.provider_error;
+        node.appendChild(sys);
+      }
+    }
     drawerNote(m.text, "interviewer");
     suggestFor(m.text);
     return;

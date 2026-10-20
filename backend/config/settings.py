@@ -75,7 +75,10 @@ class Settings(BaseSettings):
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
     anthropic_model: str = Field(default="claude-3-5-haiku-latest", alias="ANTHROPIC_MODEL")
     gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
-    gemini_model: str = Field(default="gemini-2.0-flash", alias="GEMINI_MODEL")
+    # Gemini model. NOTE: gemini-2.0-flash / gemini-2.5-flash are retired for new
+    # users (404) and newer models can be capacity-limited (503). Known-working:
+    # gemini-3.5-flash, gemini-3.6-flash, gemini-3-flash-preview, gemini-3.1-flash-lite.
+    gemini_model: str = Field(default="gemini-3.5-flash", alias="GEMINI_MODEL")
 
     # Paper research & knowledge retrieval (HTTP-based, no MCP daemon required)
     semantic_scholar_api_key: str = Field(default="", alias="SEMANTIC_SCHOLAR_API_KEY")

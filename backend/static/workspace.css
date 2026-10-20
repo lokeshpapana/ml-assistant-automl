@@ -1003,6 +1003,12 @@ tr:hover .tbl-act, tr:focus-within .tbl-act { opacity: 1; }
   color: var(--text-4);
 }
 .msg.a .who i { color: var(--accent-2); font-style: normal; font-size: 11px; }
+.src-badge {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 1px 7px; border-radius: 999px; margin-left: 2px;
+  background: var(--panel-3); color: var(--text-3);
+}
+.src-badge.llm { background: var(--accent-soft); color: var(--accent-2); }
 .msg.a .txt { white-space: pre-wrap; word-break: break-word; }
 .msg.a .txt p { margin: 0 0 var(--s3); }
 .msg.a .txt p:last-child { margin-bottom: 0; }

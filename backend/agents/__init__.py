@@ -1,5 +1,6 @@
 """Specialized agent roles for the Interactive AutoML & Multi-Agent engine."""
 
+from .assistant import AssistantAgent
 from .data_fetcher import DataFetcherAgent, build_synthetic_dataset
 from .interviewer import InterviewerAgent
 from .llm import BaseLLM, get_llm
@@ -7,6 +8,7 @@ from .researcher import ResearchAgent
 from .trainer import TrainerAgent, build_candidate_ladder
 
 __all__ = [
+    "AssistantAgent",
     "InterviewerAgent",
     "DataFetcherAgent",
     "ResearchAgent",
